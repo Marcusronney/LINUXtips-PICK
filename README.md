@@ -2,7 +2,16 @@
 Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
 
 
-Construíndo Infraestrutura.
+INFRAESTRUTURA
+
+No meu projeto, o cluster irá rodar localmente em uma VM no Hyper-V.
+
+Especificações VM Hyper-V.
+
+|       VM       |       CPU        |     RAM     |     OS      |
+|----------------|------------------|-------------|-------------|
+|     Hyper-V    | Xeon 2360 4 Core |     17GB    | Rocky Linux |  
+
 
 Configurando IP.
 
