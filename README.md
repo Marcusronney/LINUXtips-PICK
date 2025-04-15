@@ -4,70 +4,71 @@ Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips
 
 INFRAESTRUTURA
 
-No meu projeto, o cluster irá rodar localmente em uma VM no Hyper-V.
+No meu projeto, o Cluster irá rodar localmente em uma VM no Hyper-V.
 
-Especificações VM Hyper-V.
+Especificações:
 
 |       VM       |       CPU        |     RAM     |     OS      |
 |----------------|------------------|-------------|-------------|
 |     Hyper-V    | Xeon 2360 4 Core |     17GB    | Rocky Linux |  
 
 
-Configurando IP.
+PROVISIONANDO SERVER PARA O CLUSTER.
 
-# 1. Identifique o nome da conexão associada à interface eth0
-nmcli con show
+Rede:
 
-# Exemplo de saída (ajuste conforme necessário):
-# NAME     UUID                                  TYPE      DEVICE
-# eth0     xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  ethernet  eth0
+Irei configurar o IP 192.168.1.81/24 de forma static na subrede 192.168.1.x junto com meu gateway, o DNS será do Google (8.8.8.8).
 
-# 2. Configure IP fixo, gateway e DNS
+```
 nmcli con mod eth0 ipv4.addresses 192.168.1.81/24
 nmcli con mod eth0 ipv4.gateway 192.168.1.254
 nmcli con mod eth0 ipv4.dns 8.8.8.8
 nmcli con mod eth0 ipv4.method manual
+```
 
-# 3. Reinicie a conexão para aplicar as alterações
-nmcli con down eth0 && nmcli con up eth0
+Reinicie a conexão para aplicar as alterações.
+
+*nmcli con down eth0 && nmcli con up eth0*
 
 Visualizar:
 
-ip a show eth0
-nmcli dev show eth0
+*ip a show eth0
+nmcli dev show eth0*
 
 
-IP configurado. -----------------------------------------------------------------
-
-
-PROVISIONANDO SERVER PARA O CLUSTER
+Rede Configurada. -----------------------------------------------------------------
 
 
 Vamos atualizar o OS.
 
-#dnf update -y
+```
+dnf update -y
+```
 
 Instale o Git:
-
+```
 sudo dnf install -y git
+```
 
 
+VM atualizada e Git instalado, agora vamos para o Docker.
 
-VM atualizada, agora vamos instalar o Docker
-
-docker_instalado.png
 Docker:
+```
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-
+```
 Vamos instalar o Conterinerd
+```
 sudo dnf install -y docker-ce docker-ce-cli containerd.io
-
+```
 
 Habilite o service do docker na inicialização.
+```
 sudo systemctl enable docker --now
-
+```
 Verifique a instalação
-docker --version
+
+*docker --version*
 
 ![Title](imagens/docker/docker_instalado.png)
 
@@ -75,17 +76,16 @@ docker --version
 
 Instalando Kubectl
 
-Vamos instalar a versão stable do kubectl, dar permissão para execução e mover a saída para o diretório /usr/local/bin/
-
+Vamos instalar a versão stable do kubectl, dar permissão para execução e mover a saída para o diretório */usr/local/bin/*
+```
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
-
+```
 
 Verifique a instalação
 
-kubectl version --client
-
+*kubectl version --client*
 
 ![Title](imagens/kubectl/kubectl.png)
 
@@ -93,11 +93,12 @@ kubectl version --client
 
 Deploy KinD.
 
-Vamos baixar o kind, dar permissão de execução e mover para o diretório /usr/local/bin/kind
-
+Vamos baixar o kind, dar permissão de execução e mover para o diretório */usr/local/bin/kind*
+```
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
 chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
+```
 
 Verifique a instalação:
 
@@ -135,9 +136,9 @@ nodes:
 
 
 Deploy:
-
-*kind create cluster --name giropops-cluster --config cluster-config.yaml*
-
+```
+kind create cluster --name giropops-cluster --config cluster-config.yaml
+```
 
 ![Title](imagens/kind/1.png)
 
@@ -160,12 +161,11 @@ Se tudo estiver OK, você verá:
 
 ![Title](imagens/kind/2.png)
 
-
-
 Cluster funcionando.
 
 
 Vamos preparar a nossa imagem para deploy.
+
 
 MELANGE
 
