@@ -2,20 +2,20 @@
 Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
 
 
-INFRAESTRUTURA
+## INFRAESTRUTURA
 
 No meu projeto, o Cluster irá rodar localmente em uma VM no Hyper-V.
 
-Especificações:
+# Especificações:
 
 |       VM       |       CPU        |     RAM     |     OS      |
 |----------------|------------------|-------------|-------------|
 |     Hyper-V    | Xeon 2360 4 Core |     17GB    | Rocky Linux |  
 
 
-PROVISIONANDO SERVER PARA O CLUSTER.
+## PROVISIONANDO SERVER PARA O CLUSTER.
 
-Rede:
+# Rede:
 
 Irei configurar o IP 192.168.1.81/24 de forma static na subrede 192.168.1.x junto com meu gateway, o DNS será do Google (8.8.8.8).
 
@@ -51,13 +51,13 @@ sudo dnf install -y git
 ```
 
 
-VM atualizada e Git instalado, agora vamos para o Docker.
+# VM atualizada e Git instalado, agora vamos para o Docker.
 
-Docker:
+# Docker:
 ```
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 ```
-Vamos instalar o Conterinerd
+# Vamos instalar o Conterinerd
 ```
 sudo dnf install -y docker-ce docker-ce-cli containerd.io
 ```
@@ -74,7 +74,7 @@ Verifique a instalação
 
 
 
-Instalando Kubectl
+# Instalando Kubectl
 
 Vamos instalar a versão stable do kubectl, dar permissão para execução e mover a saída para o diretório */usr/local/bin/*
 ```
@@ -91,7 +91,7 @@ Verifique a instalação
 
 
 
-Deploy KinD.
+# Deploy KinD.
 
 Vamos baixar o kind, dar permissão de execução e mover para o diretório */usr/local/bin/kind*
 ```
@@ -135,7 +135,7 @@ nodes:
 
 
 
-Deploy:
+# Deploy:
 ```
 kind create cluster --name giropops-cluster --config cluster-config.yaml
 ```
@@ -167,7 +167,7 @@ Cluster funcionando.
 Vamos preparar a nossa imagem para deploy.
 
 
-MELANGE
+## MELANGE
 
 O Melange é uma ferramenta para construir pacotes para sistemas baseados em 
 Alpine Linux e APKO. Ele permite que você crie pacotes .apk que podem ser incluídos em imagens APKO e 
@@ -200,18 +200,15 @@ Teste o Melange:
 ![Title](imagens/melange/1.png)
 
 
-APKO
+#APKO
 
-
+```
 curl -L https://github.com/chainguard-dev/apko/releases/download/v0.10.0/apko_0.10.0_linux_amd64.tar.gz -o apko.tar.gz
-
 tar -xzf apko.tar.gz
-
 cd apko_0.10.0_linux_amd64/
-
 chmod +x apko
 sudo mv apko /usr/local/bin/
-
+```
 
 ![Title](imagens/melange/apko.png)
 
@@ -225,7 +222,7 @@ Verifique a versão:
 
 
 
-MELANGE e APKO Instalado com sucesso!
+**MELANGE e APKO Instalado com sucesso!**
 
 
 
@@ -233,9 +230,10 @@ Preparando a imagem giropops-senhas https://github.com/badtuxx/giropops-senhas
 
 
 Vamos realizar Clone do repo.
-
+```
 git clone https://github.com/badtuxx/giropops-senhas.git
 cd giropops-senhas
+```
 
 Gere as chaves:
 
@@ -342,7 +340,7 @@ Resumo do que ele faz:
 Agora, vamos criar o manifesto do apko.
 
 nano apko.yaml
-
+```
 contents:
   repositories:
     - ./packages
@@ -361,7 +359,7 @@ archs:
 
 environment:
   PATH: /usr/bin:/bin
-
+```
 
 Crie o diretório mkdir packages/
 
@@ -380,8 +378,6 @@ giropops-senhas/
 └── packages/            # Onde o .apk será salvo
 ├── output/              # Gerado automaticamente com os pacotes
     └── packages/x86_64/
-
-
 
 
 
@@ -444,11 +440,12 @@ Verifique o arquivo gerado: ls -lh giropops.tar
 
 
 
-SUBINDO IMAGEM APKO para o DOCKER HUB.
+# SUBINDO IMAGEM APKO para o DOCKER HUB.
 
 
 *docker load < giropops.tar*
 
 ![Title](imagens/melange/apko_docker.png)
+
 
 
