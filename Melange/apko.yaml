@@ -1,0 +1,18 @@
+contents:
+  repositories:
+    - ./packages
+    - https://dl-cdn.alpinelinux.org/alpine/edge/main
+    - https://dl-cdn.alpinelinux.org/alpine/edge/community
+  keyring:
+    - ./melange.rsa.pub
+  packages:
+    - giropops-senhas
+
+entrypoint:
+  command: /usr/bin/giropops-senhas
+
+archs:
+  - x86_64
+
+environment:
+  PATH: /usr/bin:/bin

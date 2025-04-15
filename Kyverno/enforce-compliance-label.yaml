@@ -1,0 +1,22 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: enforce-compliace-label
+spec:
+  validationFailureAction: enforce #block a criação de recursos que violem a regra
+  rules:
+  - name: require-complice-label
+    match: #define regra para Pod
+      resources:
+        kinds:
+        - Pod
+    validate:
+      message: "Todos os pods deve ter o label 'compliance: true'."
+      pattern:
+        metadata: #verifica se o pod possuí rótulo compliance:true
+          labels:
+            compliance: "true"
+        spec: #grante que os conteiners usem imagens do repo chainguard
+          containers:
+          - name: "*"
+          image: "cgr.dev/chainguard/*"

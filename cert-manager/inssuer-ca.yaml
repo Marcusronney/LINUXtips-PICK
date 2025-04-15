@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: giropops-ca
+  namespace: default
+spec:
+  ca:
+    secretName: giropops-ca-key-pair

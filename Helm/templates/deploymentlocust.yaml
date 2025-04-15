@@ -1,0 +1,40 @@
+{{- range $component, $config := .Values.deployments }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $component }}
+  labels:
+    app: {{ $config.labels.app }}
+spec:
+  replicas: {{ $config.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $config.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ $config.labels.app }}
+    spec:
+      containers:
+        - name: {{ $component }}
+          image: {{ $config.image }}
+          ports:
+            {{- range $config.ports }}
+            - containerPort: {{ .port }}
+            {{- end }}
+          env:
+            {{- if eq $component "giropops-senhas" }}
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            {{- end }}
+          resources:
+            requests:
+              memory: {{ $config.resources.requests.memory }}
+              cpu: {{ $config.resources.requests.cpu }}
+            limits:
+              memory: {{ $config.resources.limits.memory }}
+              cpu: {{ $config.resources.limits.cpu }}
+{{- end }}

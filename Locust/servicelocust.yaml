@@ -1,0 +1,14 @@
+{{- if .Values.locust.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: locust-service
+spec:
+  selector:
+    app: locust-giropops
+  ports:
+    - protocol: TCP
+      port: 8089
+      targetPort: 8089
+  type: {{ .Values.locust.service.type }}
+{{- end }}
