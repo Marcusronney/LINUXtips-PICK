@@ -167,7 +167,103 @@ Cluster funcionando.
 Vamos preparar a nossa imagem para deploy.
 
 
-## MELANGE
+
+
+
+
+# DOCKER
+
+Iremos criar um Dockerfile Single-Stage Runtime para a aplicação.
+
+
+Vamos criar um **Dockerfile** dentro do diretório da aplicação.
+
+***Estrutura para o Dockerfile:***
+
+giropops-senhas/
+
+├── app.py
+
+├── requirements.txt
+
+├── templates/
+
+├── static/
+
+└── Dockerfile
+
+
+
+
+Dockerfile
+
+```
+FROM python:3.12-slim #estamos definindo a imagem oficinal Python
+
+WORKDIR /app #Aqui definimos o diretório principal do container, todos os comandos agora irão rodar a parti do /app
+
+COPY requirements.txt . #/app/requirements.txt
+COPY app.py . #/app/app.py
+COPY templates templates/ #/app/templates/
+COPY static static/ #/app/static/
+
+RUN pip install --no-cache-dir -r requirements.txt #aqui, vamos instalar as dependências dentro do .txt
+
+EXPOSE 5000 #o container irá escutar na porta 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"] #definimos um comando para subir o flask e aceitar conexão de qualquer ip.
+
+```
+
+
+Vamos Buildar a aplicação.
+
+```
+docker build -t giropops-senhas .
+```
+
+Agora vamos expor o container na porta 5000 e testar a aplicação.
+```
+docker run -p 5000:5000 giropops-senhas
+```
+
+![Title](imagens/docker/buildgiro.png)
+
+
+Aplicação funcionando.
+
+![Title](imagens/docker/pops.png)
+
+Agora que criamos e buildamos a aplicação giropops-senhas no Docker, vamos analisar a imagem.
+
+Usando o comando *docker images* e *docker history* conseguimos visualizar a imagem criada e o seu processo de build. Note que a imagem possuí um tamanho de 140MB.
+
+![Title](imagens/docker/dockerimage.png)
+
+Saída do docker history:
+```
+IMAGE          CREATED         CREATED BY                                 SIZE      COMMENT
+527daaa695dc   11 minutes ago  CMD ["flask" "run" "--host=0.0.0.0"]        0B
+<missing>      11 minutes ago  EXPOSE map[5000/tcp:{}]                    0B
+<missing>      11 minutes ago  RUN pip install --no-cache-dir ...         15.3MB
+<missing>      11 minutes ago  COPY static static/                        101kB
+<missing>      11 minutes ago  COPY templates templates/                  5.78kB
+<missing>      11 minutes ago  COPY app.py .                              5.59kB
+<missing>      1 hour ago      COPY requirements.txt .                    51B
+<missing>      1 hour ago      WORKDIR /app                               0B
+<missing>      7 days ago      FROM python:3.12-slim                      74.8MB (base image + dependências)
+```
+![Title](imagens/docker/dockerhistory.png)
+
+Aqui podemos visualizar todas as camadas do processo de build da nossa aplicação. Uma imagem Single-Stage, tamanho um pouco elevado e com uma superfície de ataque elevada.
+
+
+
+# Agora, iremos fazer o build da aplicação utilizando Melange + APKO.
+
+
+
+### MELANGE
 
 O Melange é uma ferramenta para construir pacotes para sistemas baseados em 
 Alpine Linux e APKO. Ele permite que você crie pacotes .apk que podem ser incluídos em imagens APKO e 
@@ -218,22 +314,13 @@ Verifique a versão:
 *apko version*
 
 
-![Title](imagens/melange/1.png)
+![Title](imagens/melange/apko1.png)
 
 
 
 **MELANGE e APKO Instalado com sucesso!**
 
 
-
-Preparando a imagem giropops-senhas https://github.com/badtuxx/giropops-senhas
-
-
-Vamos realizar Clone do repo.
-```
-git clone https://github.com/badtuxx/giropops-senhas.git
-cd giropops-senhas
-```
 
 Gere as chaves:
 
@@ -244,6 +331,8 @@ Gere as chaves:
 Agora possuímos 2 chaves, uma privada "melange.rsa" e outra pública "melange.rsa.pub".
 
 Copie as chaves para uma pasta chama keys.
+
+*mkdir keys*
 
 *cp melange.rsa melange.rsa.pub keys*
 
@@ -339,7 +428,7 @@ Resumo do que ele faz:
     
 Agora, vamos criar o manifesto do apko.
 
-nano apko.yaml
+vi apko.yaml
 ```
 contents:
   repositories:
@@ -363,6 +452,8 @@ environment:
 
 Crie o diretório mkdir packages/
 
+*mkdir packages*
+
 Estrutura:
 giropops-senhas/
 ├── app/                        # Código-fonte da aplicação
@@ -381,7 +472,7 @@ giropops-senhas/
 
 
 
-Vamos Buildar a imagem, primeramente, faça login no Docker Hub: *docker login*
+Vamos Buildar a imagem, primeramente, faça login no **Docker Hub**: *docker login*
 
 
 
@@ -404,9 +495,11 @@ Os campos *INFO wrote packages/x86_64/giropops-senhas-0.1-r0.apk* e
 
 
 Agora possuímos o .apk da aplicação.
+
 Ìndice assinado e o diretório *packages/x86_64/* pronto para o apko.
 ```
 #ls packages/x86_64/
+
 APKINDEX.tar.gz  giropops-senhas-0.1-r0.apk
 ```
 
@@ -431,21 +524,63 @@ giropops.tar → imagem gerada como tarball
 
 -k melange.rsa.pub → chave pública usada para verificação de pacotes
 
-Imagem APKO Construída com sucesso.
+**Imagem APKO Construída com sucesso.**
 
 ![Title](imagens/melange/5.png)
 
-Verifique o arquivo gerado: ls -lh giropops.tar
+
+Verifique o arquivo gerado: 
+```
+ls -lh giropops.tar
+```
 ![Title](imagens/melange/4.png)
 
 
 
 # SUBINDO IMAGEM APKO para o DOCKER HUB.
 
+Vamos carregar a imagem.tar
 
 *docker load < giropops.tar*
 
 ![Title](imagens/melange/apko_docker.png)
 
+Vamos realizar login no Docker Hub, definir uma tag para a imagem criada e fazer push.
+```
+docker login
+docker tag
+docker push
+```
+
+![Title](imagens/melange/dockerhub.png)
+
+Imagem APKO upada no Docker Hub com apenas 18.82 MB.
 
 
+
+
+
+# TRIVY
+
+
+
+Instalando:
+
+curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+aquasecurity/trivy info checking GitHub for latest tag
+aquasecurity/trivy info found version: 0.61.0 for v0.61.0/Linux/64bit
+aquasecurity/trivy info installed /usr/local/bin/trivy
+
+![Title](imagens/trivy/trivy.png)
+
+
+Vamos verificar as vulnerabilidades da nossa imagem AKPO.
+```
+trivy image --severity HIGH,CRITICAL --ignore-unfixed geforce8400gsd/giropops:latest
+```
+
+![Title](imagens/trivy/scan1.png)
+
+
+0 Vulnerabilidades.
