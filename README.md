@@ -1,5 +1,74 @@
-# LINUXtips-PICK
-Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
+# Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
+
+O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo @Badtuxx. O Desafio possuí o objetivo de criar uma aplicação de gestão de senhas utilizando ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, automatizados e observáveis com alta disponibilidade e CI/CD.
+
+Requisitos Técnicos
+✅ 1. Docker
+Containerizar a aplicação giropops-senhas
+
+Criar um Dockerfile eficiente e seguro
+
+Publicar imagem em repositório privado
+
+☸️ 2. Kubernetes
+Deploy da aplicação via manifests (YAML)
+
+Criar Deployment, Service, Ingress, Secrets, ConfigMaps
+
+Expor a aplicação de forma externa com Ingress
+
+🧙‍♂️ 3. Helm
+Criar um Helm Chart com variáveis para múltiplos ambientes (dev, staging, prod)
+
+Publicar o Chart em repositório privado
+
+🔐 4. Kyverno
+Criar políticas de segurança:
+
+Proibir uso de containers com USER root
+
+Exigir assinatura de imagens (Cosign)
+
+Bloquear variáveis sensíveis não criptografadas
+
+Forçar boas práticas (compliance)
+
+🔏 5. Cosign
+Assinar imagens Docker
+
+Integrar Kyverno para validar assinaturas automaticamente no cluster
+
+📈 6. Prometheus
+Instrumentar a aplicação com métricas customizadas
+
+Criar dashboards e alertas baseados em métricas
+
+Integrar com Prometheus para scraping automático
+
+📦 7. APKO + Melange
+Usar Melange para empacotar a aplicação em .apk
+
+Gerar imagens com APKO, com segurança e sem Dockerfile
+
+Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
+------------------------------------
+
+
+Tecnologias Utilizadas:
+
+Docker – Containerização
+
+Kubernetes – Orquestração
+
+Helm – Automação de Deploy
+
+Kyverno – Políticas de segurança
+
+Cosign – Assinatura de imagens
+
+Prometheus – Monitoramento e alertas
+
+Melange + APKO – Distribuição de pacotes seguros e leves
 
 
 ## INFRAESTRUTURA
