@@ -172,7 +172,10 @@ Vamos preparar a nossa imagem para deploy.
 
 
 
-# DOCKER
+# DOCKER 🐳
+Docker é uma plataforma open-source que permite empacotar uma aplicação e todas as suas dependências em um container — um ambiente isolado que roda de forma consistente em qualquer.
+Basicamente ele tem a função de mentir para a aplicação para que ela pense que está rodando em uma máquina com hardware independente, quando na realidade todos os recursos estão isolados.
+
 
 Iremos criar um Dockerfile Single-Stage Runtime para a aplicação.
 
@@ -267,8 +270,8 @@ Aqui podemos visualizar todas as camadas do processo de build da nossa aplicaç�
 ### MELANGE
 
 O Melange é uma ferramenta para construir pacotes para sistemas baseados em 
-Alpine Linux e APKO. Ele permite que você crie pacotes .apk que podem ser incluídos em imagens APKO e 
-usados em containers leves.
+Alpine Linux e APKO através de manifestos YAML. Ele permite que você crie pacotes .apk que podem ser incluídos em imagens APKO e 
+usados em containers leves. APKO pega pacotes .apk (como os que o Melange criou) e monta uma imagem de container OCI — segura, minimalista e sem precisar de Dockerfile nem daemon Docker.
 
 
 Vamos instalar o Melange.
@@ -617,14 +620,30 @@ Agora possuímos uma imagem Ultra-minimalista com apenas 20 MB e com uma superf�
 
 
 # Kubernetes
+Kubernetes (também chamado de K8s) é uma plataforma open-source de orquestração de containers.
+Ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
 
-Buildando a imagem no Kubernetes com KinD.
+Arquitetura do Kubernetes:
+```
+Componente	Função
+Cluster	Conjunto de máquinas (nodes) onde os containers rodam
+Master Node	Onde roda o “cérebro” do Kubernetes (API, scheduler, controller)
+Worker Nodes	Onde os containers são executados
+Pod	A menor unidade de execução: 1 ou mais containers agrupados
+Deployment	Gerencia a criação/atualização de múltiplos pods
+Service	Exposição de pods por IP fixo / load balancing
+Ingress	Regras de roteamento HTTP/HTTPS externas
+ConfigMap / Secret	Injeção de configs e dados sensíveis
+Namespace	Isolamento lógico entre aplicações
+```
+
+**Buildando a imagem no Kubernetes com KinD.**
 
 KinD = “Kubernetes IN Docker”
 É uma forma super leve de rodar um cluster Kubernetes completo dentro de containers Docker.
 
 
-Como nosso KiND já está instalado, vamos parti para o build da aplicação. 
+Como nosso KiND já está instalado através do manifesto kind-config.yaml, vamos parti para o build da aplicação. 
 
 Verificando o Cluster.
 
