@@ -597,6 +597,22 @@ Agora, vamos comparar as vulnerabilidades da nossa imagem APKO com o nosso Docke
 
 **105 Vulnerabilidades**.
 
+
+### Comparativo de Imagens - AKPO vs Docker
+
+Agora possuímos uma imagem Ultra-minimalista com apenas 20 MB e com uma superfície de ataques reduzida, possuindo apenas o necessário. Note que diferença de vulnerablidades, de 105 para 0.
+
+| Critério                   | Dockerfile Clássico (`python:3.12-slim`) | Melange + APKO (`alpine`)           |
+|---------------------------|-------------------------------------------|-------------------------------------|
+| 📦 Imagem base            | python:3.12-slim (~74MB)                  | alpine (~5MB base)                  |
+| 📐 Tamanho final da imagem| ~140MB                                    | ~20-25MB                            |
+| 🛡️ Segurança               | Usuário root                              | Usuário **não-root** (UID 65532)    |
+| 🧼 Imagem limpa           | Contém pip, gcc, cache, etc.              | Só o necessário, nada de build tools|
+| 🔁 Reprodutibilidade      | Parcial                                   | **Total (com assinatura RSA)**      |
+| 🔐 Supply Chain Security  | Não possui verificação de pacotes         | **Melange + assinatura de pacotes** |
+| 🔧 Complexidade           | Baixa (fácil de aprender)                 | Moderada (curva de aprendizado maior)|
+| Vulnerabilidades           | 105                                       | 0                                    |
+
 ------------------------------------------------------------------
 
 
@@ -665,6 +681,7 @@ kube-proxy (2 pods)	Regras de rede por node
 kindnet (2 pods)	CNI de rede do KinD
 
 Conseguimos visualizar a saúde do nosso Cluster, todos os Pods necessários para o cluster funcionar estão rodando perfeitamente na namespace kube-system.
+
 
 
 ----------------------------
