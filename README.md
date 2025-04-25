@@ -1789,6 +1789,215 @@ Prometheus e Grafana acessados com sucesso.
 
 
 
+# Cert-Manager 
+
+O cert-manager é um controlador de certificados para Kubernetes que automatiza a emissão, renovação e gerenciamento de certificados TLS — de forma segura e integrada ao cluster.
+
+
+Instalando:
+```
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+```
+
+Verificando os PODs:
+```
+kubectl get all --namespace cert-manager
+```
+![Title](imagens/cert-manager/cert.png)
+
+
+Em ambientes locais como o Kind, irei usar o selfSigned para emitir os certificado pois meu cluster local não DNS público nem acesso externo pela WAN. Certificados Self-Singed são certificados auto assinados pelo Cluster, basicamente o Cluster vira uma CA.
+
+
+Nesta etapa, estou definindo um manifesto para deploy do Issue selfSigned + Certificado CA.
+
+Emitindo a CA e criando um certificado autofirmado (self-signed):
+
+selfsigned-giropops-prod.yaml
+````
+apiVersion: cert-manager.io/v1
+kind: Issuer #um emissor de certificados
+metadata:
+  name: selfsigned-issuer
+  namespace: prod
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: giropops-ca
+  namespace: prod
+spec:
+  isCA: true
+  secretName: giropops-ca-secret
+  commonName: giropops.local
+  issuerRef:
+    name: selfsigned-issuer
+    kind: Issuer
+````
+
+
+Agora irei criar o manifesto Issue do tipo CA.
+Esse Issuer permite que o cert-manager emita certificados TLS usando uma CA (Autoridade Certificadora) 
+existente, que está armazenada no cluster dentro de um Secret TLS.
+
+inssuer-ca.yaml
+```
+apiVersion: cert-manager.io/v1 #Versão da API do cert-manager
+kind: Issuer #um emissor de certificados
+metadata:
+  name: giropops-ca-issuer #Nome do emissor
+  namespace: prod #namespace
+spec:
+  ca:
+    secretName: giropops-ca-secret #Nome do Secret TLS que possuí a CA e a key.
+```
+
+
+Por último, irei definir o manifesto para o certificate apontando para prod.giropops.local.
+
+certificado-giropops.yaml
+````
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: giropops-cert
+  namespace: prod
+spec:
+  secretName: giropops-tls
+  dnsNames:
+    - giropops.local
+  issuerRef:
+    name: giropops-ca-issuer
+    kind: Issuer
+`````
+
+Aplicando:
+```
+kubectl apply -f selfsigned-giropops-prod.yaml
+kubectl apply -f inssuer-ca.yaml
+kubectl apply -f certificado-giropops.yaml
+```
+
+![Title](imagens/cert-manager/apply.png)
+
+Fluxo:
+````
+[ giropops-ca-issuer (Issuer) ]
+        ↓
+[ giropops-cert (Certificate) ]
+        ↓
+[ giropops-tls (Secret TLS com cert + key) ]
+        ↓
+[ Ingress TLS → HTTPS habilitado em giropops.local ]
+````
+
+Vou verificar as CA no namespace prod:
+```
+kubectl get issuer -n prod
+kubectl get certificate -n prod
+kubectl get secret giropops-tls -n prod
+```
+![Title](imagens/cert-manager/ca.png)
+
+Agora já consigo visualizar o Secret giropops-tls do meu cluster.
+
+Extraindo ca.crt e .crt:
+
+
+
+
+giropops.ca.crt
+````
+kubectl get secret giropops-ca-secret -n prod -o jsonpath="{.data['ca\.crt']}" | base64 -d > giropops-ca.crt
+````
+
+
+
+giropops.crt
+````
+kubectl get secret giropops-tls -n prod -o jsonpath="{.data['tls\.crt']}" | base64 -d > giropops.crt
+````
+Podemos verificar os certicados giropops-ca.crt e giropops.crt
+````
+#ls
+certificado-giropops.yaml  giropops-ca.crt  giropops.crt  inssuer-ca.yaml  selfsigned-giropops-prod.yaml`
+````
+**giropops.crt** = Chave privada
+
+**giropops.crt** = Chave pública
+
+
+
+
+Verificando o CN:
+````
+openssl x509 -in giropops-ca.crt -noout -text -issuer -subject -dates
+````
+![Title](imagens/cert-manager/cn.png)
+
+
+No manifesto ingress.yaml, foi passado váriaveis para percorrer o values-prod.yaml
+````
+  tls:
+  - hosts:
+      - {{ .Values.ingress.host }}
+    secretName: {{ .Values.ingress.tlsSecretName }}
+````
+
+No values-prod.yaml, defini os valores do SecretName, para se conectar ao CA criado.
+````
+  tlsSecretName: giropops-tls
+  issuerName: giropops-ca-issuer
+````
+
+Resumindo, o Cert-Maneger atraves dos manifests emitiu o Secret com cert e chave. O Ingress aponta para este Secret e o Nginx Controlller serve o certificado para o Host.
+
+Realizando teste do certificado:
+
+`````
+curl -v https://prod.giropops.local --cacert giropops-ca.crt
+`````
+![Title](imagens/cert-manager/curlcert.png)
+
+Certificado Válidado com sucesso.
+
+**Detalhe**: Como meu Cluster é local,as outras máquinas na rede não conhecem e nem confiam na minha CA. Neste caso, irei instalar manualmente o certificado **giropops-ca.crt** no host.
+
+Uma maneira simples de coletar o certificado dentro do cluster é usando o SCP no PowerShell do Windows.
+
+````
+scp root@192.168.1.81:/home/pick/PICK/.github/workflows/cert-manager/giropops-ca/ca.crt $HOME\Downloads\giropops-ca.crt
+````
+![Title](imagens/cert-manager/windows.png)
+
+
+Certificado instalado e válido.
+![Title](imagens/cert-manager/certificadovalido.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
