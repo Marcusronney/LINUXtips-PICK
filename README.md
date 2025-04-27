@@ -1626,8 +1626,15 @@ Verificando assinatura:
 cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:latest
 ```
 
+### Secret - Cosign
 
 
+```
+kubectl create secret generic cosign-pub \
+  --from-file=cosign.pub=/home/pick/PICK/.github/cosign/cosign.pub \
+  -n cert-manager
+```
+![Title](imagens/cosign/secret.png)
 
 
 # KUBE PROMETHEUS 
@@ -1978,6 +1985,290 @@ Certificado instalado e válido.
 
 
 
+
+
+
+
+
+
+
+
+# KYVERNO - 
+
+
+
+Kyverno é uma ferramenta de gerenciamento de políticas para Kubernetes.
+
+Funcionalidades:
+Validação e Mutação de Recursos.
+Gerenciamento de Políticas.
+Relatórios e Exceções.
+Verificação de Assinaturas de Imagens.
+
+
+Instalação:
+
+Adicionando Repo ao HELM:
+```
+helm repo add kyverno https://kyverno.github.io/kyverno/
+helm repo update
+```
+
+Criando Namespace **kyverno** e instalando os pacotes do kyverno:
+````
+kubectl create namespace kyverno
+
+helm install kyverno kyverno/kyverno --namespace kyverno
+````
+![Title](imagens/kyverno/kyverno.png)
+
+Verificando CRD.
+```
+kubectl get crd | grep kyverno
+```
+![Title](imagens/kyverno/crdkyverno.png)
+
+Verificando Pods da namespace kyverno:
+````
+kubectl get pods -n kyverno
+````
+![Title](imagens/kyverno/pod.png)
+
+
+
+Kyverno Instalado com sucesso!
+
+
+
+Criando as Policis:
+
+### verificando-assinaturas-images-cosign.yaml
+
+Esta Policy só permite criar Pods com imagens assinadas pela chave pública Cosign
+
+```
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verificando-assinaturas-images
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: verify-signed-images
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - prod
+      verifyImages:
+        - imageReferences:
+            - "docker.io/geforce8400gsd/*"
+          key: "k8s://cert-manager/cosign-pub"
+          attestations: [] #Neste campo, estamos definindo que a chave está no cluster, o namespace onde procurar e o nome da chave.
+```
+
+### desabilitando-root.yaml
+
+````
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: desabilitando-root
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: no-run-as-root
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - prod
+      validate:
+        message: "Rodar como root é proibido na namespace prod."
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - securityContext:
+                  runAsNonRoot: true
+````
+
+### bloqueando-env.yaml
+
+Bloqueia a criação de Pods na namespace prod se eles tiverem variáveis de ambiente sensíveis declaradas nos containers, como:
+
+````
+PASSWORD
+
+SECRET
+
+TOKEN
+
+AWS_ACCESS_KEY
+
+AWS_SECRET_KEY
+````
+
+````
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: block-sensitive-env-vars-prod
+spec:
+  validationFailureAction: enforce # Quando violado, o bloqueio é realizado
+  background: true #aplica a pods existentes
+  rules:
+    - name: bloqueando-env
+      match:
+        any: #aqui, estou setando para a namespace Prod
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - prod
+      validate:
+        message: "Variáveis de ambiente sensíveis não são permitidas em 'prod'."
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.containers[].env[].name }}"
+                operator: AnyIn
+                value:#bloqueio
+                  - PASSWORD
+                  - SECRET
+                  - TOKEN
+                  - AWS_ACCESS_KEY
+                  - AWS_SECRET_KEY
+````
+
+### compliance.yaml
+
+Essa policy força que Deployments da namespace prod:
+
+    Não usem root
+
+    Não peçam privilégios extras
+
+    Não modifiquem seu filesystem
+
+    Não carreguem capabilities perigosas
+
+````
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: compliance
+spec:
+  validationFailureAction: enforce # faz um bloqueio se não for conforme a regra
+  background: true #Também verifica recursos já existentes, não só novos
+  rules:
+    - name: compliance-padrões-mínimos
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+              namespaces:
+                - prod  #atacando todos os Pods da namespace prod
+      validate:
+        message: "Deployments devem seguir padrões de segurança mínimos."
+        pattern:
+          spec:
+            template:
+              spec:
+                securityContext:
+                  runAsNonRoot: true #não-root
+                containers:
+                  - securityContext:
+                      runAsNonRoot: true
+                      allowPrivilegeEscalation: false #sem escalação de privilégios
+                      capabilities:
+                        drop:
+                          - ALL #aqui, defini para bloquear todas as capacidades de ADMIN
+                      readOnlyRootFilesystem: true # O Filesystem foi definido como somente leitura
+````
+
+### resources-limits.yaml
+
+
+
+````
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: resources-limits
+spec:
+  validationFailureAction: enforce #Neste argumento, um bloqueio é realizado em caso de violação.
+  rules:
+  - name: validando-limites-prod
+    match:
+      any:
+        - resources:
+            kinds:
+              - Pod #atacando todos os Pods
+            namespaces:
+              - prod #namespace prod
+    validate:
+      message: "Precisa definir o limite de recursos de CPU e Memória RAM para todos os Pods de Produlçao"
+      pattern:
+        spec:
+          containers:
+          - name: "*" #Wildcard, assim, a policy pega em todos os Containers.
+            resources:
+              limits:
+                cpu: "?*" # Obrigatório uso de argumento para CPU
+                memory: "?*" #Obrigatório uso de argumento para Memóri
+````
+
+Aplicando as Policys:
+````
+kubectl apply -f verificando-assinaturas-images-cosign.yaml
+kubectl apply -f desabilitando-root.yaml
+kubectl apply -f bloqueando-env.yaml
+kubectl apply -f compliance.yaml
+kubectl apply -f resources-limits.yaml
+````
+
+
+
+
+
+![Title](imagens/kyverno/policy.png)
+
+
+
+### Realizando testes de Policys.
+
+No diretório /kyverno/testes-Policys, criei alguns manifestos para testar as policys aplicadas.
+
+Note que o deploy foi bloqueado por conta das regras **compliance**, **desabilitando-root** e **resources-limits**.
+![Title](imagens/kyverno/test-assinatura.png)
+
+![Title](imagens/kyverno/test-root.png)
+
+Outros exemplos do Kyverno entrando em ação:
+
+![Title](imagens/kyverno/testcompliance.png)
+
+--------------------
+
+
+
+
+
+
+
+
+
+
+# CI/CD - GitHub Actions
 
 
 
