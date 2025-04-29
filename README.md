@@ -2,6 +2,40 @@
 
 O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo @Badtuxx. O Desafio possuí o objetivo de criar uma aplicação de gestão de senhas utilizando ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, automatizados e observáveis com alta disponibilidade e CI/CD.
 
+
+### Tecnologias envolvidas no projeto:
+
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white&style=for-the-badge)
+![Redis](https://img.shields.io/badge/Redis-DB%20Cache-red?logo=redis&logoColor=white&style=for-the-badge)
+![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black?logo=flask&logoColor=white&style=for-the-badge)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white&style=for-the-badge)
+![YAML](https://img.shields.io/badge/YAML-Configuration-cccccc?logo=yaml&logoColor=white&style=for-the-badge)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white&style=for-the-badge)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Orchestration-326CE5?logo=kubernetes&logoColor=white&style=for-the-badge)
+![Grafana](https://img.shields.io/badge/Grafana-Analytics-F46800?logo=grafana&logoColor=white&style=for-the-badge)
+![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white&style=for-the-badge)
+![Linux](https://img.shields.io/badge/Linux-OS-FCC624?logo=linux&logoColor=black&style=for-the-badge)
+![Locust](https://img.shields.io/badge/Locust-Load%20Testing-0FA36B?logo=locust&logoColor=white&style=for-the-badge)
+![Melange](https://img.shields.io/badge/Melange-APK%20Builder-5e5e5e?style=for-the-badge)
+![Apko](https://img.shields.io/badge/Apko-Container%20Images-5e5e5e?style=for-the-badge)
+![Helm](https://img.shields.io/badge/Helm-Package%20Manager-0F1689?logo=helm&logoColor=white&style=for-the-badge)
+![Kyverno](https://img.shields.io/badge/Kyverno-Policy%20Engine-4B8BBE?style=for-the-badge)
+![Cosign](https://img.shields.io/badge/Cosign-Image%20Signing-00ADD8?style=for-the-badge)
+![Kind](https://img.shields.io/badge/Kind-Kubernetes%20Cluster-3DDC84?style=for-the-badge)
+![Trivy](https://img.shields.io/badge/Trivy-Vulnerability%20Scanner-20C997?style=for-the-badge)
+![NGINX Ingress](https://img.shields.io/badge/Nginx%20Ingress-Load%20Balancer-009639?logo=nginx&logoColor=white&style=for-the-badge)
+![DNS](https://img.shields.io/badge/DNS-Domain%20Name%20System-5e5e5e?style=for-the-badge)
+![HPA](https://img.shields.io/badge/HPA-Auto%20Scaling-326CE5?logo=kubernetes&logoColor=white&style=for-the-badge)
+![Kube-Prometheus](https://img.shields.io/badge/Kube--Prometheus-Monitoring-326CE5?logo=kubernetes&logoColor=white&style=for-the-badge)
+![Chainguard](https://img.shields.io/badge/Chainguard-Supply%20Chain%20Security-5e5e5e?style=for-the-badge)
+![Docker Hub](https://img.shields.io/badge/Docker_Hub-Repository-2496ED?logo=docker&logoColor=white&style=for-the-badge)
+
+
+
+
+
+
+
 Requisitos Técnicos
 ✅ 1. Docker
 Containerizar a aplicação giropops-senhas
