@@ -254,7 +254,7 @@ giropops-senhas/
 
 
 
-Dockerfile
+**Dockerfile**
 
 ```
 FROM python:3.12-slim #estamos definindo a imagem oficinal Python
@@ -295,7 +295,7 @@ Aplicação funcionando.
 
 Agora que criamos e buildamos a aplicação giropops-senhas no Docker, vamos analisar a imagem.
 
-Usando o comando *docker images* e *docker history* conseguimos visualizar a imagem criada e o seu processo de build. Note que a imagem possuí um tamanho de 140MB.
+Usando o comando **docker images** e **docker history** conseguimos visualizar a imagem criada e o seu processo de build. Note que a imagem possuí um tamanho de 140MB.
 
 ![Title](imagens/docker/dockerimage.png)
 
@@ -315,27 +315,28 @@ IMAGE          CREATED         CREATED BY                                 SIZE  
 ![Title](imagens/docker/dockerhistory.png)
 
 Aqui podemos visualizar todas as camadas do processo de build da nossa aplicação. Uma imagem Single-Stage, tamanho um pouco elevado e com uma superfície de ataque elevada.
+Uma imagem Single-Stage é o modelo mais simples de construção de imagens Docker, onde todo o processo de build acontece em um único Dockerfile.
 
 
 
-# Agora, iremos fazer o build da aplicação utilizando Melange + APKO.
+# Agora, irei realizar o build da aplicação utilizando **Melange** + **APKO**.
 
 
 
-### MELANGE
+# MELANGE
 
 O Melange é uma ferramenta para construir pacotes para sistemas baseados em 
 Alpine Linux e APKO através de manifestos YAML. Ele permite que você crie pacotes .apk que podem ser incluídos em imagens APKO e 
 usados em containers leves. APKO pega pacotes .apk (como os que o Melange criou) e monta uma imagem de container OCI — segura, minimalista e sem precisar de Dockerfile nem daemon Docker.
 
 
-Vamos instalar o Melange.
-
+Instalando o Melange.
+```
 curl -L https://github.com/chainguard-dev/melange/releases/download/v0.23.6/melange_0.23.6_linux_amd64.tar.gz -o melange.tar.gz
 tar -xzf melange.tar.gz
-
-Arquivo extraído, vamos entrar no diretório, dar permissão e mover para /ur/local/bin/melange
-
+```
+Arquivo extraído, irei entrar no diretório, dar permissão e mover para /ur/local/bin/melange
+````
 cd melange_0.23.6_linux_amd64/
 
 #ls
@@ -343,20 +344,23 @@ LICENSE  melange
 
 mv melange /usr/local/bin/
 chmod +x /usr/local/bin/melange
-
+````
 ![Title](imagens/melange/melange.png)
 
 
-Teste o Melange:
-
-*melange version*
-
+Testando o Melange:
+````
+melange version
+````
 
 ![Title](imagens/melange/1.png)
 
 
-#APKO
+# APKO
 
+APKO é uma ferramenta mantida epla Chainguard que tem a função de criar imagens de containers seguras, minimalistas e super otimizadas, apenas declarando o que você quer num arquivo de configuração YAML a parti de imagens Alpine Linux, sem precisar usar um Dockerfile.
+
+Instalação:
 ```
 curl -L https://github.com/chainguard-dev/apko/releases/download/v0.10.0/apko_0.10.0_linux_amd64.tar.gz -o apko.tar.gz
 tar -xzf apko.tar.gz
@@ -368,10 +372,10 @@ sudo mv apko /usr/local/bin/
 ![Title](imagens/melange/apko.png)
 
 
-Verifique a versão:
-
-*apko version*
-
+Verificando a versão:
+````
+apko version
+````
 
 ![Title](imagens/melange/apko1.png)
 
@@ -379,7 +383,7 @@ Verifique a versão:
 
 **MELANGE e APKO Instalado com sucesso!**
 
-
+Criando pacote de imagem com Melange:
 
 Gerando as chaves:
 ```
@@ -401,7 +405,7 @@ cp melange.rsa.pub melange.key
 
 
 
-Criando manifesto melange.yaml
+Declarando as especificações da imagem via manifesto melange.yaml
 
 vi melange.yaml
 
@@ -536,8 +540,8 @@ docker run --rm --privileged \
   --repository-append ./packages
 ```
 
-Os campos *INFO wrote packages/x86_64/giropops-senhas-0.1-r0.apk* e 
-*INFO writing signed index to packages/x86_64/APKINDEX.tar.gz* indicam que o empacotamento foi realizado com sucesso.
+Os campos **INFO wrote packages/x86_64/giropops-senhas-0.1-r0.apk** e 
+**INFO writing signed index to packages/x86_64/APKINDEX.tar.gz** indicam que o empacotamento foi realizado com sucesso.
 
 ![Title](imagens/melange/buildmelange.png)
 
@@ -608,7 +612,7 @@ docker run -p 5000:5000 giropops-senhas:latest-amd64
 
 # Docker HUB
 
-Vamos realizar login no Docker Hub, definir uma tag para a imagem criada e fazer push.
+Irei realizar login no Docker Hub, definir uma tag para a imagem criada e fazer push.
 ```
 docker login
 docker tag
@@ -618,7 +622,7 @@ docker push
 
 
 
-Imagem APKO upada no Docker Hub com apenas 25.75 MB.
+Imagem APKO upada no Docker Hub com apenas **25.75 MB**.
 
 ![Title](imagens/melange/dockerhub.png)
 
@@ -627,6 +631,7 @@ Imagem APKO upada no Docker Hub com apenas 25.75 MB.
 
 # TRIVY - Análise de Vulnerabilidades
 
+O Trivy é uma ferramenta de código aberto que serve como scanner de vulnerabilidades, ideal para identificar falhas em imagens de contêineres.
 
 ![Linux](https://img.icons8.com/?size=100&id=UjcGNVXknmz3&format=png&color=000000)
 
@@ -661,7 +666,7 @@ Agora, vamos comparar as vulnerabilidades da nossa imagem APKO com o nosso Docke
 
 ### Comparativo de Imagens - AKPO vs Docker
 
-Agora possuímos uma imagem Ultra-minimalista com apenas 20 MB e com uma superfície de ataques reduzida, possuindo apenas o necessário. Note que diferença de vulnerablidades, de 105 para 0.
+Agora possuo uma imagem Ultra-minimalista com apenas 20 MB e com uma superfície de ataques reduzida, possuindo apenas o necessário. Note que diferença de vulnerablidades, de 105 para 0.
 
 | Critério                   | Dockerfile Clássico (`python:3.12-slim`) | Melange + APKO (`alpine`)           |
 |---------------------------|-------------------------------------------|-------------------------------------|
@@ -678,6 +683,7 @@ Agora possuímos uma imagem Ultra-minimalista com apenas 20 MB e com uma superf�
 
 
 # Kubernetes
+
 Kubernetes (também chamado de K8s) é uma plataforma open-source de orquestração de containers.
 Ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
 
@@ -941,7 +947,7 @@ giropops-senhas/
 │   └── _helpers.tpl
 ```
 
-No projeto, um dos requisitos é ter 3 ambientes, um de produlçao, outro de teste e outro de desenvolvimento. A separação dos ambientes será feita através dos manifestos values, exemplo: values-prod.yaml, values-dev.yaml e values-staging.yaml.
+No projeto, um dos requisitos é ter 3 ambientes, um de produçao, outro de teste e outro de desenvolvimento. A separação dos ambientes será feita através dos manifestos values, exemplo: values-prod.yaml, values-dev.yaml e values-staging.yaml.
 
 Criando as Namespaces:
 ```
@@ -954,7 +960,7 @@ kubectl create namespace prod
 
 **Deploy Helm:** values-dev.yaml, values-staging.yaml e values-prod.yaml
 
-Desenvolvimento:
+Dev:
 ```
 helm upgrade --install giropops-dev . \
   --namespace dev \
@@ -966,7 +972,7 @@ helm install giropops-staging . \
   --namespace staging \
   --values values-staging.yaml 
 ```
-Produção:
+Prod:
 ```
 helm upgrade --install giropops-prod . \
   --namespace prod \
@@ -1045,7 +1051,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 Verificando os Pods Nginx.
 
-O NGINX Controller, por padrão, não especifica um nodeSelector, mas às vezes os taints/tolerations ou a falta de afinidade impedem ele de ser escalonado nesse único node.
+O NGINX Controller, por padrão, não especifica um *nodeSelector*, mas às vezes os *taints/tolerations* ou a falta de afinidade impedem ele de ser escalonado nesse único node.
 Se o pod não iniciar, rode:
 ```
 kubectl patch deployment ingress-nginx-controller -n ingress-nginx \
@@ -1146,7 +1152,7 @@ kubectl get ingress -n staging
 ![Title](imagens/ingress/ingress-n.png)
 
 
-Vamos verificar os Pods Nginx Ingress.
+Verificando os Pods Nginx Ingress.
 
 ```
 kubectl get pods --all-namespaces -l app=ingress-nginx
@@ -1198,7 +1204,7 @@ Pod (aplicação rodando)
 
 ### DNS - Domain Name System
 
-Como meu Cluster foi deployado em uma rede LAN, apontei 3 endereços DNS para o meu LocalHost, assim consiguirei acessar os DNS de cada ambiente.
+Como meu Cluster foi deployado em uma rede LAN, apontei 3 endereços DNS para o meu Localhost, assim conseguirei acessar os DNS de cada ambiente.
 
 vi /etc/hosts
 ```
@@ -1247,8 +1253,8 @@ Exemplo: Utiliza métricas definidas em "resource" e "requests" dos containers p
 Para o HPA funcionar, é necessário o Metrics Server instalado no Cluster.
 
 ### METRICS SERVER
-
-**METRICS SERVER** é um agregador de métricas de recursos de sistemas, que coleta métricas como uso de CPU e memória dos nós e pods no Cluster.
+r
+**[METRICS SERVER](https://github.com/kubernetes-sigs/metrics-serve)** é um agregador de métricas de recursos de sistemas, que coleta métricas como uso de CPU e memória dos nós e pods no Cluster.
 Essas métricas são utilizadas no HPA para fazer o escalonamento dos Pods.
 
 
@@ -1299,7 +1305,7 @@ Metrics Server Instalando e coletando dados.
 
 **Deploy HPA:**
 
-em /templetes criei um manifesto HPA.yaml que declara as especificações de Auto Escaler.
+em /templetes criei um manifesto HPA.yaml que declara as especificações de AutoScaling.
 
 Nos manifestos Values declarei um campo para definir as especificações do HPA. Esses valores são carregados automaticamente pelo Helm quando rodo o Update.
 ```
@@ -1311,7 +1317,7 @@ hpa:
   memoryUtilization: 95 #aqui defini o requisito mínimo de memória RAM para ativar a regra.
   targetDeployment: giropops-senhas # aqui estou apontando para meu deployment.
 ```
-Primeiro busca o valor hpa.targetDeployment do values.yaml. Se não estiver definido, cai no helper giropops.fullname.
+Primeiro busca o valor **hpa.targetDeployment** do values.yaml. Se não estiver definido, cai no helper **giropops.fullname**.
 ```
 scaleTargetRef:
   name: {{ .Values.hpa.targetDeployment | default (include "giropops.fullname" .) }}
@@ -1333,7 +1339,7 @@ Com esta maneira, posso chamar cada values de forma dinâmica através do:
 {{ include "giropops.fullname" . }}
 ```
 
-HPA.yaml
+**HPA.yaml**
 ```
 {{- if .Values.hpa.enabled }}
 apiVersion: autoscaling/v2
@@ -1397,7 +1403,7 @@ kubectl get hpa -n prod
 
 # LOCUST - TESTE DE CARGA 
 
-Locust é uma ferramenta open source escrita em Python para fazer testes de performance e carga.Você escreve scripts de teste em Python que simulam o comportamento de usuários usando sua aplicação.
+[Locust](https://locust.io/) é uma ferramenta open source escrita em Python para fazer testes de performance e carga.Você escreve scripts de teste em Python que simulam o comportamento de usuários usando sua aplicação.
 
 Como o Locust Funciona?
 
@@ -1454,7 +1460,7 @@ class Giropops(HttpUser):
 
 Para Deployment do locust, foi criado um manifesto *locust-deployment.yaml* e um Service *locust-service.yaml*.
 
-locust-deployment.yaml
+**locust-deployment.yaml**
 ```
 {{- if .Values.locust.enabled }}
 apiVersion: apps/v1
@@ -1493,7 +1499,7 @@ spec:
 {{- end }}
 ```
 
-locust-service.yaml
+**locust-service.yaml**
 ```
 {{- if .Values.locust.enabled }}
 apiVersion: v1
@@ -1511,9 +1517,9 @@ spec:
 {{- end }}
 ```
 
-Para ativar o Locust nos ambientes, declarei um campo para o Locust marcando como **enable: true** no ambiente de Staging, os demais ambientes deixei o parâmetro como *false*.
+Para ativar o Locust nos ambientes, declarei um campo para o Locust marcando como **enable: true** no ambiente de Staging, os demais ambientes deixei o parâmetro como **false**.
 
-values-staging.yaml
+**values-staging.yaml**
 ```
 locust:
   enabled: true  # Habilita ou desabilita o Locust
@@ -1574,7 +1580,7 @@ a criar novos Pods.
 
 # COSIGN - IMAGENS ASSINADAS E SEGURAS
 
-
+[Cosign](https://github.com/sigstore/cosign)  é uma ferramenta de linha de comando desenvolvida como parte do projeto Sigstore. Ela é usada para assinar, verificar, armazenar e recuperar artefatos de software, particularmente imagens de container, através de interfaces com registradores OCI (Open Container Initiative)
 
 
 Instalação Cosign:
@@ -1634,7 +1640,7 @@ kubectl create secret generic cosign-pub \
 
 # KUBE PROMETHEUS 
 
-Kube Prometheus é uma coleção de componentes para instalar e configurar um stack completo de monitoramento no Kubernetes, feito pela comunidade Prometheus + CoreOS.
+[Kube Prometheu](https://github.com/prometheus-operator/kube-prometheus) é uma coleção de componentes para instalar e configurar um stack completo de monitoramento no Kubernetes, feito pela comunidade Prometheus + CoreOS.
 
 
 ```
@@ -1683,7 +1689,7 @@ Pods e Services rodando com sucesso, agora irei criar o **Service Monitor**.
 
 ### Service Monitor
 
-Service monitor é uma Custom Resource Definition (CRD) usado pelo Prometheus Operator no kubernetes...
+[Service monitor](https://observability.thomasriley.co.uk/prometheus/configuring-prometheus/using-service-monitors/) é uma Custom Resource Definition (CRD) usado pelo Prometheus Operator no kubernetes...
 
 Ele já vem instalado no kube-prometheus. O Kube-prometheus já vem com vários ServiceMonitors configurados.
 Para visualizar os servicemonitors:
@@ -1692,7 +1698,8 @@ kubectl get servicemonitors -n monitoring
 ````
 
 Criei um manifesto para o service monitor para monitorar o ambiente de Produção.
-servicemonitor-prod.yaml
+
+**servicemonitor-prod.yaml**
 ````
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -1724,7 +1731,7 @@ kubectl apply -f servicemonitor-prod.yaml
 
 Para expor o Grafana e Prometheus, criei 2 manifestos ingress que apontam para os services *kube-prometheus-grafana* e *kube-prometheus-kube-prome-prometheus*.
 
-ingress-grafana.yaml
+**ingress-grafana.yaml**
 ````
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -1747,7 +1754,8 @@ spec:
                 port:
                   number: 80
 ````
-ingress-prometheus.yaml
+
+**ingress-prometheus.yaml**
 ````
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -1772,7 +1780,8 @@ spec:
 
 ````
 
-Para o DNS, adicionei *prometheus.giropops.local* e *grafana.giropops.local* no arquivo **/etc/hosts**.
+Para o DNS, adicionei **prometheus.giropops.local** e **grafana.giropops.local** no arquivo **/etc/hosts**.
+
 ![Title](imagens/monitoring/dnsprome.png)
 
 
@@ -1783,6 +1792,7 @@ kubectl apply -f grafana.yaml
 ````
 
 Prometheus e Grafana acessados com sucesso.
+
 ![Title](imagens/monitoring/prografana.png)
 
 
@@ -1793,7 +1803,7 @@ Prometheus e Grafana acessados com sucesso.
 
 # Cert-Manager 
 
-O cert-manager é um controlador de certificados para Kubernetes que automatiza a emissão, renovação e gerenciamento de certificados TLS — de forma segura e integrada ao cluster.
+O [Cert-Manager](https://github.com/Marcusronney/cert-manager) é um controlador de certificados para Kubernetes que automatiza a emissão, renovação e gerenciamento de certificados TLS — de forma segura e integrada ao cluster.
 
 
 Instalando:
@@ -1815,7 +1825,7 @@ Nesta etapa, estou definindo um manifesto para deploy do Issue selfSigned + Cert
 
 Emitindo a CA e criando um certificado autofirmado (self-signed):
 
-selfsigned-giropops-prod.yaml
+**selfsigned-giropops-prod.yaml**
 ````
 apiVersion: cert-manager.io/v1
 kind: Issuer #um emissor de certificados
@@ -1844,7 +1854,7 @@ Agora irei criar o manifesto Issue do tipo CA.
 Esse Issuer permite que o cert-manager emita certificados TLS usando uma CA (Autoridade Certificadora) 
 existente, que está armazenada no cluster dentro de um Secret TLS.
 
-inssuer-ca.yaml
+**inssuer-ca.yaml**
 ```
 apiVersion: cert-manager.io/v1 #Versão da API do cert-manager
 kind: Issuer #um emissor de certificados
@@ -1859,7 +1869,7 @@ spec:
 
 Por último, irei definir o manifesto para o certificate apontando para prod.giropops.local.
 
-certificado-giropops.yaml
+**certificado-giropops.yaml**
 ````
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -1988,11 +1998,10 @@ Certificado instalado e válido.
 
 
 
-# KYVERNO - 
+# KYVERNO - Políticas de Segurança
 
 
-
-Kyverno é uma ferramenta de gerenciamento de políticas para Kubernetes.
+[Kyverno](https://kyverno.io/docs/) é uma ferramenta de gerenciamento de políticas para Kubernetes, ele trabalha como um Policy Engine servindo para aplicar regras de segurança, validar configurações e automatizar correções dentro de clusters.
 
 Funcionalidades:
 Validação e Mutação de Recursos.
@@ -2035,7 +2044,7 @@ Kyverno Instalado com sucesso!
 
 
 
-Criando as Policis:
+Criando as Políticas de Segurança:
 
 ### verificando-assinaturas-images-cosign.yaml
 
@@ -2265,7 +2274,7 @@ Outros exemplos do Kyverno entrando em ação:
 
 # CI/CD - GitHub Actions
 
-
+![github](https://img.icons8.com/?size=100&id=3tC9EQumUAuq&format=png&color=000000)
 
 
 
