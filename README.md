@@ -1,22 +1,22 @@
 # Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
 
-O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo [@Badtuxx](https://github.com/badtuxx) O desafio consiste em um projeto prático de DevOps focado na criação de uma aplicação de gestão de senhas. O projeto exige que os participantes utilizem uma stack moderna com ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, automatizados e observáveis com alta disponibilidade e CI/CD.
+O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo [@Badtuxx](https://github.com/badtuxx). O desafio consiste em um projeto prático de DevOps focado na aplicação de gestão de senhas [Giropops-Senhas](https://github.com/badtuxx/giropops-senhas). O projeto exige Stacks com ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, CI/CD,  automatizados e observáveis com alta disponibilidade.
 
-Objetivos principais:
+**Objetivos principais:**
 
-Containerizar a aplicação com Docker e publicá-la.
+  Containerizar a aplicação com Docker e publicá-la.
 
-Orquestrar o deployment com Kubernetes e expor o serviço com Ingress.
+  Orquestrar o deployment com Kubernetes e expor o serviço com Ingress.
 
-Automatizar o deploy utilizando Helm Charts.
+  Automatizar o deploy utilizando Helm Charts.
 
-Implementar segurança de runtime com Kyverno e Cosign (assinatura de imagens).
+  Implementar segurança de runtime com Kyverno e Cosign (assinatura de imagens).
 
-Monitorar métricas com Prometheus e configurar alertas.
+  Monitorar métricas com Prometheus e configurar alertas.
 
-Distribuir pacotes da aplicação utilizando Melange e Apko.
+  Distribuir pacotes da aplicação utilizando Melange e Apko.
 
-Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
+  Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
 
 ### Tecnologias envolvidas no projeto:
 
@@ -594,13 +594,14 @@ docker load < giropops.tar
 
 ![Title](imagens/melange/apko_docker.png)
 
-Realizando um teste da imagem empagotada via APKO:
+Realizando um teste da imagem empacotada via APKO:
 
 ```
 docker run -p 5000:5000 giropops-senhas:latest-amd64
 ```
 
 # Build Melange e empacotamento APKO realizado com sucesso!
+
 ![Title](imagens/melange/buildapko.png)
 
 
@@ -1014,6 +1015,7 @@ kubectl get all --all-namespaces
 
 # NGINX INGRESS - Expondo o Cluster
 
+![Nginx](https://img.icons8.com/?size=100&id=f8puwbhs0kUR&format=png&color=000000)
 
 Ingress é um recurso do Kubernetes que gerencia o acesso externo de um serviço dentro do Cluster.
 
@@ -1806,7 +1808,7 @@ kubectl get all --namespace cert-manager
 ![Title](imagens/cert-manager/cert.png)
 
 
-Em ambientes locais como o Kind, irei usar o selfSigned para emitir os certificado pois meu cluster local não DNS público nem acesso externo pela WAN. Certificados Self-Singed são certificados auto assinados pelo Cluster, basicamente o Cluster vira uma CA.
+Em ambientes locais como o Kind, irei usar o **SelfSigned** para emitir os certificado pois meu cluster local não DNS público nem acesso externo pela WAN. Certificados Self-Singed são certificados auto assinados pelo Cluster, basicamente o Cluster vira uma CA.
 
 
 Nesta etapa, estou definindo um manifesto para deploy do Issue selfSigned + Certificado CA.
@@ -1926,7 +1928,7 @@ certificado-giropops.yaml  giropops-ca.crt  giropops.crt  inssuer-ca.yaml  selfs
 ````
 **giropops.crt** = Chave privada
 
-**giropops.crt** = Chave pública
+**giropops.ca.crt** = Chave pública
 
 
 
