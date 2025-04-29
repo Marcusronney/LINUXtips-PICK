@@ -98,10 +98,13 @@ sudo dnf install -y git
 # VM atualizada e Git instalado, agora vamos para o Docker.
 
 ### Docker
+Docker é uma plataforma que facilita criar, empacotar e rodar aplicações dentro de containers. Um container é um ambiente leve, portátil e isolado que roda uma aplicação e suas dependências (bibliotecas, arquivos de configuração, etc.), tudo empacotado junto.
+
 ```
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 ```
-# Irei instalar o Conterinerd
+### Conterinerd
+Containerd é o runtime de containers — ou seja, é o motor que roda containers 
 ```
 sudo dnf install -y docker-ce docker-ce-cli containerd.io
 ```
@@ -111,16 +114,18 @@ Habilitei o service do docker na inicialização.
 sudo systemctl enable docker --now
 ```
 Verificando a instalação
-
-*docker --version
+````
+docker --version
 ````
 ![Title](imagens/docker/docker_instalado.png)
 
 
 
-# Instalando Kubectl
+### Kubectl
+kubectl é a ferramenta de linha de comando usada para interagir com um cluster Kubernetes. Quando você executa um comando, ele envia uma requisição para a API Server, que coordena as ações necessárias no cluster.
 
-Vamos instalar a versão stable do kubectl, dar permissão para execução e mover a saída para o diretório */usr/local/bin/*
+
+Instalando a versão stable do kubectl, dando permissão para execução e movendo a saída para o diretório */usr/local/bin/*
 ```
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x kubectl
@@ -128,30 +133,31 @@ sudo mv kubectl /usr/local/bin/
 ```
 
 Verifique a instalação
-
-*kubectl version --client*
-
+````
+kubectl version --client
+````
 ![Title](imagens/kubectl/kubectl.png)
 
 
 
-# Deploy KinD.
+# KinD - Kubernetes in Docker
+Kind é uma ferramenta que permite criar clusters Kubernetes locais usando containers Docker como nós do cluster.
 
-Vamos baixar o kind, dar permissão de execução e mover para o diretório */usr/local/bin/kind*
+Baixaxando o kind, dando permissão de execução e movendo para o diretório */usr/local/bin/kind*
 ```
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64
 chmod +x ./kind
 sudo mv ./kind /usr/local/bin/kind
 ```
 
-Verifique a instalação:
-
-*kind --version*
-
+Verificando a instalação:
+````
+kind --version
+````
 ![Title](imagens/kind/kind.png)
 
 
-Kind instalado com sucesso. Vamos criar um manifest para deploy do Cluster.
+Kind instalado com sucesso. Irei criar um manifest para deploy do Cluster.
 
 
 kind-config.yaml
@@ -191,11 +197,13 @@ kind create cluster --name giropops-cluster --config cluster-config.yaml
 Vamos verificar se o Cluster subiu corretamente.
 
 Cluster:
-*kubectl cluster-info --context kind-giropops-cluster*
-
+````
+kubectl cluster-info --context kind-giropops-cluster
+````
 Nodes:
-*kubectl get nodes*
-
+````
+kubectl get nodes
+````
 Se tudo estiver OK, você verá:
 
     O endereço do API server https://192.168.1.81:17443
@@ -205,22 +213,23 @@ Se tudo estiver OK, você verá:
 
 ![Title](imagens/kind/2.png)
 
-Cluster funcionando.
+Cluster funcionando perfeitamente.
 
 
-Vamos preparar a nossa imagem para deploy.
-
-
-
+**Preparando a imagem Docker para Deploy**
 
 
 
-# DOCKER 🐳
+
+
+
+# DOCKER ![Docker](https://img.icons8.com/?size=100&id=22813&format=png&color=000000)
+
 Docker é uma plataforma open-source que permite empacotar uma aplicação e todas as suas dependências em um container — um ambiente isolado que roda de forma consistente em qualquer.
 Basicamente ele tem a função de mentir para a aplicação para que ela pense que está rodando em uma máquina com hardware independente, quando na realidade todos os recursos estão isolados.
 
 
-Iremos criar um Dockerfile Single-Stage Runtime para a aplicação.
+Irei criar um Dockerfile Single-Stage Runtime para a aplicação.
 
 
 Vamos criar um **Dockerfile** dentro do diretório da aplicação.
@@ -263,13 +272,13 @@ CMD ["flask", "run", "--host=0.0.0.0"] #definimos um comando para subir o flask 
 ```
 
 
-Vamos Buildar a aplicação.
+Buildando a aplicação.
 
 ```
 docker build -t giropops-senhas .
 ```
 
-Agora vamos expor o container na porta 5000 e testar a aplicação.
+Agora irei expor o container na porta 5000 e testar a aplicação.
 ```
 docker run -p 5000:5000 giropops-senhas
 ```
