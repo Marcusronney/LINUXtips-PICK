@@ -4,58 +4,43 @@ on:
   push:
     branches:
       - main
-      - develop
+      - dev
+      - staging
     paths:
-      - '**.yaml'  # Só executa se houver mudanças nos arquivos .yaml (ex: manifests Helm)
-  workflow_dispatch:  # Permite execução manual (ex: produção)
+      - '**.yaml'  # Só roda se mudar YAMLs
+  workflow_dispatch:  # Manual para produção
 
 jobs:
   deploy:
-    name: Deploy para Kubernetes
-    runs-on: self-hosted  # Runner instalado em uma VM com acesso ao cluster
+    name: Deploy Kubernetes via Helm
+    runs-on: self-hosted
 
     steps:
-      - name: Checkout do Código
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configurar kubectl
+      - name: Cluster Info
         run: |
-          export KUBECONFIG=/home/github-runner/.kube/config
           kubectl cluster-info
           kubectl get nodes
 
-      - name: Verificar diretório atual
-        run: |
-          pwd
-          ls -R  # Verifica se os arquivos e os charts estão no caminho certo
-
-      - name: Verificar conteúdo do values-staging.yaml
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          echo "📄 Conteúdo do values-staging.yaml:"
-          cat /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-staging.yaml
-
-
       - name: Deploy para DEV
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/dev'
         run: |
-          helm upgrade --install giropops-dev /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste \
+          helm upgrade --install meu-app-dev ${{ github.workspace }} \
           --namespace dev \
-          -f /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-dev.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          -f ${{ github.workspace }}/values-dev.yaml
 
       - name: Deploy para STAGING
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/staging'
         run: |
-          helm upgrade --install giropops-staging /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste \
+          helm upgrade --install meu-app-staging ${{ github.workspace }} \
           --namespace staging \
-          -f /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-staging.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          -f ${{ github.workspace }}/values-staging.yaml
 
-      - name: Deploy para PRODUÇÃO (manual)
+      - name: Deploy para PROD
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         run: |
-          helm upgrade --install giropops-prod /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste \
+          helm upgrade --install meu-app-prod ${{ github.workspace }} \
           --namespace prod \
-          -f /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-prod.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          -f ${{ github.workspace }}/values-prod.yaml
