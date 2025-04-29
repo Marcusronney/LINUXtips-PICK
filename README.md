@@ -72,11 +72,12 @@ nmcli con mod eth0 ipv4.dns 8.8.8.8
 nmcli con mod eth0 ipv4.method manual
 ```
 
-Reinicie a conexão para aplicar as alterações.
+Reiniciando a conexão para aplicar as alterações.
+````
+nmcli con down eth0 && nmcli con up eth0
+````
 
-*nmcli con down eth0 && nmcli con up eth0*
-
-Visualizar:
+Visualizando:
 
 *ip a show eth0
 nmcli dev show eth0*
@@ -96,6 +97,8 @@ sudo dnf install -y git
 
 
 # VM atualizada e Git instalado, agora vamos para o Docker.
+
+![Linux](https://img.icons8.com/?size=100&id=gE2kWztHPCpb&format=png&color=000000)
 
 ### Docker
 Docker é uma plataforma que facilita criar, empacotar e rodar aplicações dentro de containers. Um container é um ambiente leve, portátil e isolado que roda uma aplicação e suas dependências (bibliotecas, arquivos de configuração, etc.), tudo empacotado junto.
@@ -378,17 +381,17 @@ Verifique a versão:
 
 
 
-Gere as chaves:
+Gerando as chaves:
 ```
 melange keygen
 ```
 
 ![Title](imagens/melange/3.png)
 
-Agora possuímos 2 chaves, uma privada "melange.rsa" e outra pública "melange.rsa.pub".
+Agora possuo 2 chaves, uma privada "melange.rsa" e outra pública "melange.rsa.pub".
 
 
-Renoméie a chave pública:
+Renomeando a chave pública:
 ```
 mkdir keys
 cp melange.rsa.pub melange.key
@@ -398,7 +401,7 @@ cp melange.rsa.pub melange.key
 
 
 
-Vamos criar nosso manifesto melange.yaml
+Criando manifesto melange.yaml
 
 vi melange.yaml
 
@@ -443,7 +446,7 @@ pipeline:
 ```
 
 
-Resumo do que ele faz:
+Resumo do manifesto melange:
 
     Define um pacote chamado giropops-senhas, versão 0.1.
 
@@ -462,7 +465,7 @@ Resumo do que ele faz:
         Instala as dependências do requirements.txt.
 
     
-Agora, vamos criar o manifesto do apko.
+Agora, irei criar o manifesto do apko.
 
 vi apko.yaml
 ```
@@ -495,10 +498,10 @@ archs:
   - x86_64
 ```
 
-Crie o diretório mkdir packages/
-
-*mkdir packages*
-
+Criando o diretório mkdir packages/
+````
+mkdir packages
+````
 Estrutura:
 giropops-senhas/
 ├── app/                        # Código-fonte da aplicação
@@ -517,11 +520,11 @@ giropops-senhas/
 
 
 
-Vamos Buildar a imagem.
+**Buildando a imagem**.
 
 
 
-Empacotando imagem com Melange via Docker.
+Empacotando imagem com **Melange** via Docker.
 ```
 docker run --rm --privileged \
   -v "${PWD}:/work" \
@@ -539,9 +542,9 @@ Os campos *INFO wrote packages/x86_64/giropops-senhas-0.1-r0.apk* e
 ![Title](imagens/melange/buildmelange.png)
 
 
-Agora possuímos o .apk da aplicação.
+Agora possuo .apk da aplicação.
 
-Ìndice assinado e o diretório *packages/x86_64/* pronto para o apko.
+Ìndice assinado e o diretório **packages/x86_64/** pronto para o apko.
 ```
 #ls packages/x86_64/
 
@@ -550,7 +553,7 @@ APKINDEX.tar.gz  giropops-senhas-0.1-r0.apk
 
 
 
-Realizando Build com APKO:
+Realizando Build com **APKO:**
 
 ```
 docker run --rm \
@@ -574,7 +577,7 @@ giropops.tar → imagem gerada como tarball
 ![Title](imagens/melange/5.png)
 
 
-Verifique o arquivo gerado: 
+Verificando o arquivo gerado: 
 ```
 ls -lh giropops.tar
 ```
@@ -584,9 +587,10 @@ ls -lh giropops.tar
 
 # SUBINDO IMAGEM APKO para o DOCKER HUB.
 
-Vamos carregar a imagem.tar para nosso repositório local:
-
-*docker load < giropops.tar*
+Irei carregar a imagem.tar para o repositório local:
+````
+docker load < giropops.tar
+````
 
 ![Title](imagens/melange/apko_docker.png)
 
@@ -623,6 +627,7 @@ Imagem APKO upada no Docker Hub com apenas 25.75 MB.
 # TRIVY - Análise de Vulnerabilidades
 
 
+![Linux](https://img.icons8.com/?size=100&id=UjcGNVXknmz3&format=png&color=000000)
 
 Instalando:
 ```
@@ -675,6 +680,8 @@ Agora possuímos uma imagem Ultra-minimalista com apenas 20 MB e com uma superf�
 Kubernetes (também chamado de K8s) é uma plataforma open-source de orquestração de containers.
 Ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
 
+![Kubernetes](https://img.icons8.com/?size=100&id=cvzmaEA4kC0o&format=png&color=000000)
+
 Arquitetura do Kubernetes:
 ```
 Componente	Função
@@ -695,31 +702,31 @@ KinD = “Kubernetes IN Docker”
 É uma forma super leve de rodar um cluster Kubernetes completo dentro de containers Docker.
 
 
-Como nosso KiND já está instalado através do manifesto kind-config.yaml, vamos parti para o build da aplicação. 
+Como o KiND já está instalado através do manifesto kind-config.yaml, irei prosseguir para o build da aplicação. 
 
 Verificando o Cluster.
 
-O KinD é um Kubernetes no qual executa o cluster via containers com Docker.
+O KinD é um Kubernetes no qual executa o cluster via containers com Docker, irei verificar os Containers responsáveis para o cluster k8s.
 
-Verifique os containers Kind:
+Verificando os containers Kind:
 ```
 docker ps -a
 ```
 ![Title](imagens/kind/dockerps-a.png)
 
-Container *giropops-cluster-worker* e *giropops-cluster-control-plane* rodando perfeitamente.
+Container **giropops-cluster-worker** e **giropops-cluster-control-plane** rodando perfeitamente.
 
 
 
 
-Verifique o Cluster:
+Verificando o Cluster:
 ```
 kind get clusters
 ```
 ![Title](imagens/kind/dockerps-a.png)
 
 
-Verifique as informações do Cluster e os Nodes
+Verificando informações do Cluster e os Nodes
 ```
 kubectl cluster-info
 kubectl get nodes
@@ -727,7 +734,7 @@ kubectl get nodes
 
 ![Title](imagens/kind/nodes_info.png)
 
-Por último, verifique os Pods do Kubernetes:
+Por último, Pods do Kubernetes:
 
 ```
 kubectl get pods -A
@@ -759,7 +766,7 @@ Conseguimos visualizar a saúde do nosso Cluster, todos os Pods necessários par
 
 Buildando a imagem Kubernetes.
 
-Vamos realizar o build e teste da aplicação.
+Irei realizar o build e teste da aplicação.
 
 Manifestos:
 
@@ -872,7 +879,8 @@ kubectl get pods --all-namespaces
 ```
 kubectl get svc --all-namespaces
 ```
-Agora possuímos os Pods e Services da aplicação e do Redis, vamos expor via *port-foward* e testar o acesso na aplicação.
+Agora podemos ver os Pods e Services da aplicação e do Redis, irei expor via *port-foward* e testar o acesso da aplicação.
+
 ![Title](imagens/kubernetes/kubectl.png)
 
 
@@ -884,6 +892,7 @@ kubectl port-forward deployment/giropops-senhas 5000:5000
 
 
 **Aplicação Buildada e acessada no Kubernetes com sucesso.**
+
 ![Title](imagens/kubernetes/aplicacao_kubernetes.png)
 
 
@@ -950,7 +959,7 @@ helm upgrade --install giropops-dev . \
   --namespace dev \
   --values values-dev.yaml
 ```
-Teste:
+Staging:
 ```
 helm install giropops-staging . \
   --namespace staging \
@@ -966,7 +975,7 @@ helm upgrade --install giropops-prod . \
 ![Title](imagens/helm/deploy.png)
 
 
-Agora possuímos as Namespaces nos 3 ambientes, prod, dev e staging.
+Agora o cluster possuí as Namespaces dos 3 ambientes, prod, dev e staging.
 ```
 helm list
 ```
@@ -989,8 +998,8 @@ kubectl get all --all-namespaces
 ![Title](imagens/helm/all.png)
 
 
-Um detalhe, no values-dev.yaml definimos **hpa:
-  enabled: false** para que o HPA funcione apenas nos ambientes prod e staing.
+**Um detalhe**, no values-dev.yaml defini **hpa: enabled: false** para que o HPA funcione apenas nos ambientes prod e staing.
+
 ![Title](imagens/helm/hpa.png)
 
 
@@ -1032,7 +1041,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 ```
 
 
-Verifique os Pods Nginx.
+Verificando os Pods Nginx.
 
 O NGINX Controller, por padrão, não especifica um nodeSelector, mas às vezes os taints/tolerations ou a falta de afinidade impedem ele de ser escalonado nesse único node.
 Se o pod não iniciar, rode:
@@ -1053,10 +1062,10 @@ kubectl get pods -n ingress-nginx
 ```
 ![Title](imagens/ingress/ingressnginx.png)
 
-Vamos realizar o Deploy do Ingress NGINX com as portas 32080 (HTTP) e 32443 (HTTPS)
+Realizando o Deploy do Ingress NGINX com as portas 32080 (HTTP) e 32443 (HTTPS)
 
 
-Agora vamos realizar deploy do manifestos ingress.yaml.
+Agora irei realizar deploy do manifestos ingress.yaml.
 
 ingress.yaml
 ```
@@ -1126,7 +1135,7 @@ helm upgrade --install giropops-prod . \
   --values values-prod.yaml
 ```
 
-Agora irei verificar os ingress criados:
+Verificando os ingress criados:
 ```
 kubectl get ingress -n dev
 kubectl get ingress -n prod
@@ -1235,6 +1244,7 @@ Exemplo: Utiliza métricas definidas em "resource" e "requests" dos containers p
 
 Para o HPA funcionar, é necessário o Metrics Server instalado no Cluster.
 
+### METRICS SERVER
 
 **METRICS SERVER** é um agregador de métricas de recursos de sistemas, que coleta métricas como uso de CPU e memória dos nós e pods no Cluster.
 Essas métricas são utilizadas no HPA para fazer o escalonamento dos Pods.
