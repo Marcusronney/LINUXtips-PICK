@@ -125,7 +125,7 @@ docker --version
 
 
 ### Kubectl
-kubectl é a ferramenta de linha de comando usada para interagir com um cluster Kubernetes. Quando você executa um comando, ele envia uma requisição para a API Server, que coordena as ações necessárias no cluster.
+[kubectl](https://kubernetes.io/pt-br/docs/tasks/tools/install-kubectl-linux/) é a ferramenta de linha de comando usada para interagir com um cluster Kubernetes. Quando você executa um comando, ele envia uma requisição para a API Server, que coordena as ações necessárias no cluster.
 
 
 Instalando a versão stable do kubectl, dando permissão para execução e movendo a saída para o diretório */usr/local/bin/*
