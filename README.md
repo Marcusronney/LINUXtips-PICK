@@ -1,7 +1,22 @@
 # Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
 
-O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo @Badtuxx. O Desafio possuí o objetivo de criar uma aplicação de gestão de senhas utilizando ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, automatizados e observáveis com alta disponibilidade e CI/CD.
+O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo [@Badtuxx](https://github.com/badtuxx) O desafio consiste em um projeto prático de DevOps focado na criação de uma aplicação de gestão de senhas. O projeto exige que os participantes utilizem uma stack moderna com ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, automatizados e observáveis com alta disponibilidade e CI/CD.
 
+Objetivos principais:
+
+Containerizar a aplicação com Docker e publicá-la.
+
+Orquestrar o deployment com Kubernetes e expor o serviço com Ingress.
+
+Automatizar o deploy utilizando Helm Charts.
+
+Implementar segurança de runtime com Kyverno e Cosign (assinatura de imagens).
+
+Monitorar métricas com Prometheus e configurar alertas.
+
+Distribuir pacotes da aplicação utilizando Melange e Apko.
+
+Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
 
 ### Tecnologias envolvidas no projeto:
 
@@ -30,98 +45,25 @@ O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo @Ba
 ![Chainguard](https://img.shields.io/badge/Chainguard-Supply%20Chain%20Security-5e5e5e?style=for-the-badge)
 ![Docker Hub](https://img.shields.io/badge/Docker_Hub-Repository-2496ED?logo=docker&logoColor=white&style=for-the-badge)
 
-
-
-
-
-
-
-Requisitos Técnicos
-✅ 1. Docker
-Containerizar a aplicação giropops-senhas
-
-Criar um Dockerfile eficiente e seguro
-
-Publicar imagem em repositório privado
-
-☸️ 2. Kubernetes
-Deploy da aplicação via manifests (YAML)
-
-Criar Deployment, Service, Ingress, Secrets, ConfigMaps
-
-Expor a aplicação de forma externa com Ingress
-
-🧙‍♂️ 3. Helm
-Criar um Helm Chart com variáveis para múltiplos ambientes (dev, staging, prod)
-
-Publicar o Chart em repositório privado
-
-🔐 4. Kyverno
-Criar políticas de segurança:
-
-Proibir uso de containers com USER root
-
-Exigir assinatura de imagens (Cosign)
-
-Bloquear variáveis sensíveis não criptografadas
-
-Forçar boas práticas (compliance)
-
-🔏 5. Cosign
-Assinar imagens Docker
-
-Integrar Kyverno para validar assinaturas automaticamente no cluster
-
-📈 6. Prometheus
-Instrumentar a aplicação com métricas customizadas
-
-Criar dashboards e alertas baseados em métricas
-
-Integrar com Prometheus para scraping automático
-
-📦 7. APKO + Melange
-Usar Melange para empacotar a aplicação em .apk
-
-Gerar imagens com APKO, com segurança e sem Dockerfile
-
-Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
 ------------------------------------
 
 
-Tecnologias Utilizadas:
-
-Docker – Containerização
-
-Kubernetes – Orquestração
-
-Helm – Automação de Deploy
-
-Kyverno – Políticas de segurança
-
-Cosign – Assinatura de imagens
-
-Prometheus – Monitoramento e alertas
-
-Melange + APKO – Distribuição de pacotes seguros e leves
-
-
-## INFRAESTRUTURA
+## INFRAESTRUTURA ON PREMISE
 
 No meu projeto, o Cluster irá rodar localmente em uma VM no Hyper-V.
 
 # Especificações:
 
-|       VM       |       CPU        |     RAM     |     OS      |
-|----------------|------------------|-------------|-------------|
-|     Hyper-V    | Xeon 2360 4 Core |     17GB    | Rocky Linux |  
+|       VM       |       CPU        |     RAM     |     OS      |  CLUSTER KUBERNETES  |
+|----------------|------------------|-------------|-------------|----------------------|
+|     Hyper-V    | Xeon 2360 4 Core |     17GB    | Rocky Linux |         KinD         |
 
 
-## PROVISIONANDO SERVER PARA O CLUSTER.
+# PROVISIONANDO SERVER PARA O CLUSTER.
 
-# Rede:
+**Rede**:
 
-Irei configurar o IP 192.168.1.81/24 de forma static na subrede 192.168.1.x junto com meu gateway, o DNS será do Google (8.8.8.8).
-
+Irei configurar o IP 192.168.1.81/24 de forma estática na subrede 192.168.1.x junto com meu gateway, o DNS será do Google (8.8.8.8).
 ```
 nmcli con mod eth0 ipv4.addresses 192.168.1.81/24
 nmcli con mod eth0 ipv4.gateway 192.168.1.254
@@ -143,11 +85,9 @@ Rede Configurada. --------------------------------------------------------------
 
 
 Vamos atualizar o OS.
-
 ```
 dnf update -y
 ```
-
 Instale o Git:
 ```
 sudo dnf install -y git
@@ -156,24 +96,23 @@ sudo dnf install -y git
 
 # VM atualizada e Git instalado, agora vamos para o Docker.
 
-# Docker ![Docker](https://img.icons8.com/?size=100&id=22813&format=png&color=000000)
-
+### Docker
 ```
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 ```
-# Vamos instalar o Conterinerd
+# Irei instalar o Conterinerd
 ```
 sudo dnf install -y docker-ce docker-ce-cli containerd.io
 ```
 
-Habilite o service do docker na inicialização.
+Habilitei o service do docker na inicialização.
 ```
 sudo systemctl enable docker --now
 ```
-Verifique a instalação
+Verificando a instalação
 
-*docker --version*
-
+*docker --version
+````
 ![Title](imagens/docker/docker_instalado.png)
 
 
