@@ -44,6 +44,7 @@ Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
 ![Kube-Prometheus](https://img.shields.io/badge/Kube--Prometheus-Monitoring-326CE5?logo=kubernetes&logoColor=white&style=for-the-badge)
 ![Chainguard](https://img.shields.io/badge/Chainguard-Supply%20Chain%20Security-5e5e5e?style=for-the-badge)
 ![Docker Hub](https://img.shields.io/badge/Docker_Hub-Repository-2496ED?logo=docker&logoColor=white&style=for-the-badge)
+![Hyper-V](https://img.shields.io/badge/Hyper--V-Virtualization-0078D7?style=for-the-badge)
 
 ------------------------------------
 
@@ -84,7 +85,7 @@ nmcli dev show eth0*
 Rede Configurada. -----------------------------------------------------------------
 
 
-Vamos atualizar o OS.
+Atualizando o OS.
 ```
 dnf update -y
 ```
