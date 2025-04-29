@@ -909,7 +909,7 @@ kubectl port-forward deployment/giropops-senhas 5000:5000
 
 # HELM - Gestão de Pacotes do Kubernetes
 
-O Helm é uma ferramenta open-source que permite gerenciar aplicações Kubernetes de forma simples e eficiente. Com o Helm, você pode instalar, atualizar e desinstalar aplicações em um cluster Kubernetes com facilidade.
+O [HELM](https://helm.sh/docs/)  é uma ferramenta open-source que permite gerenciar aplicações Kubernetes de forma simples e eficiente. Com o Helm, você pode instalar, atualizar e desinstalar aplicações em um cluster Kubernetes com facilidade.
 
 
 
@@ -957,6 +957,464 @@ kubectl create namespace prod
 ```
 ![Title](imagens/kubernetes/ns.png)
 
+![helm](https://img.icons8.com/?size=100&id=cvzmaEA4kC0o&format=png&color=000000)
+
+**Manifestos HELM:**
+/ Chart.yaml
+```
+apiVersion: v2
+name: giropops-senhas
+description: Helm chart para automatizar o deployment da aplicação giropops-senhas
+type: application
+version: 0.1.0
+appVersion: "1.0"
+```
+/ values-prod.yaml
+````
+deployments:
+  giropops-senhas:
+    name: "giropops-senhas"
+    image: "linuxtips/giropops-senhas:1.0"
+    replicas: 1
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "NodePort"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "250m"
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+
+  redis:
+    name: "redis"
+    image: "redis"
+    replicas: 1
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "250m"
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+
+services:
+  giropops-senhas:
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "LoadBalancer"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+
+  redis:
+    ports:
+      - port: 6379
+        targetPort: 6379
+        name: "redis-port"
+        serviceType: "ClusterIP"  # ✅ Corrigido, antes estava errado como "ClusterPort"
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+
+hpa:
+  enabled: true  # Define se o HPA será criado
+  minReplicas: 1
+  maxReplicas: 1
+  cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
+  memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
+
+locust:
+  enabled: true  # Habilita ou desabilita o Locust
+  image: "linuxtips/locust-giropops:1.0"
+  replicas: 1
+  service:
+    type: NodePort  # Pode ser LoadBalancer na nuvem
+    port: 8089
+  scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
+````
+
+/ values-staging.yaml
+````
+deployments:
+  giropops-senhas:
+    name: "giropops-senhas"
+    image: "linuxtips/giropops-senhas:1.0"
+    replicas: 2
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "NodePort"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "250m"
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+
+  redis:
+    name: "redis"
+    image: "redis"
+    replicas: 1
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "250m"
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+
+services:
+  giropops-senhas:
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "LoadBalancer"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+
+  redis:
+    ports:
+      - port: 6379
+        targetPort: 6379
+        name: "redis-port"
+        serviceType: "ClusterIP"  # ✅ Corrigido, antes estava errado como "ClusterPort"
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+
+hpa:
+  enabled: true  # Define se o HPA será criado
+  minReplicas: 1
+  maxReplicas: 1
+  cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
+  memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
+
+locust:
+  enabled: true  # Habilita ou desabilita o Locust
+  image: "linuxtips/locust-giropops:1.0"
+  replicas: 1
+  service:
+    type: NodePort  # Pode ser LoadBalancer na nuvem
+    port: 8089
+  scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
+````
+
+/ values-dev.yaml
+````
+deployments:
+  giropops-senhas:
+    name: "giropops-senhas"
+    image: "linuxtips/giropops-senhas:1.0"
+    replicas: 2
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "NodePort"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "250m"
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+
+  redis:
+    name: "redis"
+    image: "redis"
+    replicas: 1
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "250m"
+      limits:
+        memory: "64Mi"
+        cpu: "500m"
+
+services:
+  giropops-senhas:
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "LoadBalancer"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+
+  redis:
+    ports:
+      - port: 6379
+        targetPort: 6379
+        name: "redis-port"
+        serviceType: "ClusterIP"  # ✅ Corrigido, antes estava errado como "ClusterPort"
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+
+hpa:
+  enabled: true  # Define se o HPA será criado
+  minReplicas: 1
+  maxReplicas: 1
+  cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
+  memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
+
+locust:
+  enabled: true  # Habilita ou desabilita o Locust
+  image: "linuxtips/locust-giropops:1.0"
+  replicas: 1
+  service:
+    type: NodePort  # Pode ser LoadBalancer na nuvem
+    port: 8089
+  scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
+````
+
+/templates/ _helpers.tpl
+````
+{{- define "giropops.fullname" -}}
+{{ .Release.Name }}-{{ .Chart.Name }}
+{{- end }}
+
+{{- define "giropops.labels" -}}
+app: {{ $.Chart.Name | default "giropops-app" }}
+release: {{ $.Release.Name }}
+env: {{ (index $.Values "global" "environment") | default "dev" }}  # ✅ Evita erro se "global" não existir
+{{- end }}
+
+{{- define "giropops.image" -}}
+{{ .image | default "linuxtips/giropops-senhas:latest" }}
+{{- end }}
+
+{{- define "giropops.env" -}}
+{{- if eq .component "giropops-senhas" }}
+- name: REDIS_HOST
+  value: "redis"
+- name: REDIS_PORT
+  value: "6379"
+{{- end }}
+{{- end }}
+
+{{- define "giropops.serviceName" -}}
+{{ $.Release.Name }}-{{ $.Chart.Name }}-{{ .component }}
+{{- end }}
+
+{{- define "giropops.servicePorts" -}}
+{{- range .ports }}
+- port: {{ .port }}
+  targetPort: {{ .targetPort }}
+  protocol: TCP
+  name: {{ .name }}
+  {{- if eq .serviceType "NodePort" }}
+  nodePort: {{ .NodePort }}
+  {{- end }}
+{{- end }}
+{{- end }}
+````
+
+/templates/ deploymeny.yaml
+````
+{{- range $component, $config := .Values.deployments }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $component }}
+  labels:
+    app: {{ $config.labels.app }}
+spec:
+  replicas: {{ $config.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $config.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ $config.labels.app }}
+    spec:
+      containers:
+        - name: {{ $component }}
+          image: {{ $config.image }}
+          ports:
+            {{- range $config.ports }}
+            - containerPort: {{ .port }}
+            {{- end }}
+          env:
+            {{- if eq $component "giropops-senhas" }}
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            {{- end }}
+          resources:
+            requests:
+              memory: {{ $config.resources.requests.memory }}
+              cpu: {{ $config.resources.requests.cpu }}
+            limits:
+              memory: {{ $config.resources.limits.memory }}
+              cpu: {{ $config.resources.limits.cpu }}
+{{- end }}
+````
+
+/templates/ redis-deployment.yaml
+````
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployments.redis.name }}
+  labels:
+    app: {{ .Values.deployments.redis.labels.app }}
+spec:
+  replicas: {{ .Values.deployments.redis.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployments.redis.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployments.redis.labels.app }}
+    spec:
+      containers:
+      - name: redis
+        image: {{ .Values.deployments.redis.image }}
+        ports:
+          - containerPort: 6379
+        resources:
+          requests:
+            memory: {{ .Values.deployments.redis.resources.requests.memory }}
+            cpu: {{ .Values.deployments.redis.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.deployments.redis.resources.limits.memory }}
+            cpu: {{ .Values.deployments.redis.resources.limits.cpu }}
+        command: ["redis-server", "--appendonly", "yes"]  # Permite persistência dos dados
+````
+
+/templates/ redis-service.yaml
+````
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: {{ .Values.services.redis.labels.app }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.services.redis.labels.app }}
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+````
+
+/templates/ service.yaml
+````
+{{- range $component, $config := .Values.services }}
+  {{- range $port := $config.ports }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $component }}-{{ $port.name }}
+  labels:
+    app: {{ $config.labels.app }}
+spec:
+  type: {{ $port.serviceType }}
+  selector:
+    app: {{ $config.labels.app }}
+  ports:
+    - port: {{ $port.port }}
+      targetPort: {{ $port.targetPort }}
+      protocol: TCP
+      name: {{ $port.name }}
+      {{- if eq $port.serviceType "NodePort" }}
+      nodePort: {{ $port.NodePort }}
+      {{- end }}
+  {{- end }}
+{{- end }}
+````
+
+/templates/ configmap.yaml
+```
+# templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name }}
+  namespace: {{ .Values.configMap.namespace }}
+data:
+  REDIS_HOST: {{ .Values.configMap.data.REDIS_HOST | quote }}
+  REDIS_PORT: {{ .Values.configMap.data.REDIS_PORT | quote }}
+```
 
 **Deploy Helm:** values-dev.yaml, values-staging.yaml e values-prod.yaml
 
