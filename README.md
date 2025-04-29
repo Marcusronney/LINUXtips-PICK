@@ -122,7 +122,7 @@ sudo dnf install -y git
 
 # VM atualizada e Git instalado, agora vamos para o Docker.
 
-# Docker
+# Docker ![Docker](https://img.icons8.com/?size=100&id=22813&format=png&color=000000)
 
 ```
 sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
