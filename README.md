@@ -2734,8 +2734,24 @@ Outros exemplos do Kyverno entrando em ação:
 
 ![github](https://img.icons8.com/?size=100&id=3tC9EQumUAuq&format=png&color=000000)
 
+No repositório, foi criado 3 Branch, main = Produção, dev = Desenvolvimento e Staing = Testes.
 
+Runner no Cluster Local:
+````
+mkdir /opt/actions-runner && cd /opt/actions-runner
+curl -o actions-runner-linux-x64.tar.gz -L https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz
+tar xzf actions-runner-linux-x64.tar.gz
+````
+Kubeconfig para usuário Runner:
+````
+mkdir -p /home/github-runner/.kube
+cp /root/.kube/config /home/github-runner/.kube/config
+chown -R github-runner:github-runner /home/github-runner/.kube
+````
 
+O pipeline roda automaticamente quando houver git push nos branch.
+
+workflow:
 ````
 name: CI/CD - Helm Upgrade Kubernetes (Dev, Staging, Prod)
 
