@@ -2736,6 +2736,63 @@ Outros exemplos do Kyverno entrando em ação:
 
 
 
+````
+name: CI/CD - Helm Upgrade Kubernetes (Dev, Staging, Prod)
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+    paths:
+      - '**/*.yaml'  # Dispara só se mudar arquivos .yaml
+  workflow_dispatch:  # Permite execução manual (produção)
+
+jobs:
+  deploy:
+    name: Helm Upgrade - Kubernetes
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+
+      - name: Configurar kubectl
+        run: |
+          export KUBECONFIG=/home/github-runner/.kube/config
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Verificar Estrutura do Projeto
+        run: |
+          pwd
+          ls -laR
+
+      - name: Deploy para DEV
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          helm upgrade --install giropops-dev ${{ github.workspace }} \
+          --namespace dev \
+          -f ${{ github.workspace }}/values-dev.yaml \
+          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          
+      - name: Deploy para STAGING
+        if: github.ref == 'refs/heads/staging'
+        run: |
+          helm upgrade --install giropops-staging ${{ github.workspace }} \
+          --namespace staging \
+          -f ${{ github.workspace }}/values-staging.yaml \
+          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+
+      - name: Deploy para PRODUÇÃO (manual)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+        run: |
+          helm upgrade --install giropops-prod ${{ github.workspace }} \
+          --namespace prod \
+          -f ${{ github.workspace }}/values-prod.yaml \
+          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+````
 
 
 
