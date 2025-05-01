@@ -1,6 +1,6 @@
 # Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
 
-O Projeto final consite na resolução do desafio PICK 2024_01 proposto pelo [@Badtuxx](https://github.com/badtuxx). O desafio consiste em um projeto prático de DevOps focado na aplicação de gestão de senhas [Giropops-Senhas](https://github.com/badtuxx/giropops-senhas). O projeto exige Stacks com ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, CI/CD,  automatizados e observáveis com alta disponibilidade.
+O Projeto final consite na resolução do [desafio PICK 2024_01](https://github.com/badtuxx/LINUXtips-PICK-24_01) proposto pelo [@Badtuxx](https://github.com/badtuxx). O desafio consiste em um projeto prático de DevOps focado na aplicação de gestão de senhas [Giropops-Senhas](https://github.com/badtuxx/giropops-senhas). O projeto exige Stacks com ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, CI/CD,  automatizados e observáveis com alta disponibilidade.
 
 **Objetivos principais:**
 
@@ -507,8 +507,9 @@ Criando o diretório mkdir packages/
 mkdir packages
 ````
 Estrutura:
+````
 giropops-senhas/
-├── app/                        # Código-fonte da aplicação
+├── app/                 # Código-fonte da aplicação
 │   ├── main.py
 │   ├── requirements.txt
 │   ├── templates/
@@ -519,9 +520,8 @@ giropops-senhas/
 ├── melange.rsa          # Chave privada
 |   melange.rsa.pub      # Chave pública
 └── packages/            # Onde o .apk será salvo
-├── output/              # Gerado automaticamente com os pacotes
     └── packages/x86_64/
-
+````
 
 
 **Buildando a imagem**.
@@ -670,15 +670,13 @@ Agora possuo uma imagem Ultra-minimalista com apenas 20 MB e com uma superfície
 
 | Critério                   | Dockerfile Clássico (`python:3.12-slim`) | Melange + APKO (`alpine`)           |
 |---------------------------|-------------------------------------------|-------------------------------------|
-| 📦 Imagem base            | python:3.12-slim (~74MB)                  | alpine (~5MB base)                  |
-| 📐 Tamanho final da imagem| ~140MB                                    | ~20-25MB                            |
-| 🛡️ Segurança               | Usuário root                              | Usuário **não-root** (UID 65532)    |
-| 🧼 Imagem limpa           | Contém pip, gcc, cache, etc.              | Só o necessário, nada de build tools|
-| 🔁 Reprodutibilidade      | Parcial                                   | **Total (com assinatura RSA)**      |
-| 🔐 Supply Chain Security  | Não possui verificação de pacotes         | **Melange + assinatura de pacotes** |
-| 🔧 Complexidade           | Baixa (fácil de aprender)                 | Moderada (curva de aprendizado maior)|
-| Vulnerabilidades           | 105                                       | 0                                    |
-
+| Imagem base            | python:3.12-slim (~74MB)                  | alpine (~5MB base)                  |
+| Tamanho final da imagem| ~140MB                                    | ~20-25MB                            |
+| Segurança               | Usuário root                              | Usuário **não-root** (UID 65532)    |
+| Imagem limpa           | Contém pip, gcc, cache, etc.              | Só o necessário, nada de build tools|
+| Reprodutibilidade      | Parcial                                   | **Total (com assinatura RSA)**      |
+| Supply Chain Security  | Não possui verificação de pacotes         | **Melange + assinatura de pacotes** |
+| Vulnerabilidades           | 105                                   | 0                                    |
 ------------------------------------------------------------------
 
 
@@ -691,16 +689,16 @@ Ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
 
 Arquitetura do Kubernetes:
 ```
-Componente	Função
-Cluster	Conjunto de máquinas (nodes) onde os containers rodam
-Master Node	Onde roda o “cérebro” do Kubernetes (API, scheduler, controller)
-Worker Nodes	Onde os containers são executados
-Pod	A menor unidade de execução: 1 ou mais containers agrupados
-Deployment	Gerencia a criação/atualização de múltiplos pods
-Service	Exposição de pods por IP fixo / load balancing
-Ingress	Regras de roteamento HTTP/HTTPS externas
-ConfigMap / Secret	Injeção de configs e dados sensíveis
-Namespace	Isolamento lógico entre aplicações
+Componente	| Função |
+| Cluster |	Conjunto de máquinas (nodes) onde os containers rodam|
+|Master Node	| Onde roda o “cérebro” do Kubernetes (API, scheduler, controller)|
+|Worker Nodes |	Onde os containers são executados|
+|Pod	| A menor unidade de execução: 1 ou mais containers agrupados|
+|Deployment	| Gerencia a criação/atualização de múltiplos pods|
+|Service	| Exposição de pods por IP fixo / load balancing|
+|Ingress	| Regras de roteamento HTTP/HTTPS externas|
+|ConfigMap / Secret	| Injeção de configs e dados sensíveis|
+Namespace	Isolamento lógico entre aplicações|
 ```
 
 **Buildando a imagem no Kubernetes com KinD.**
@@ -1036,7 +1034,7 @@ services:
       - port: 6379
         targetPort: 6379
         name: "redis-port"
-        serviceType: "ClusterIP"  # ✅ Corrigido, antes estava errado como "ClusterPort"
+        serviceType: "ClusterIP" 
     labels:
       app: "redis"
       env: "labs"
@@ -1126,7 +1124,7 @@ services:
       - port: 6379
         targetPort: 6379
         name: "redis-port"
-        serviceType: "ClusterIP"  # ✅ Corrigido, antes estava errado como "ClusterPort"
+        serviceType: "ClusterIP"  
     labels:
       app: "redis"
       env: "labs"
@@ -1216,7 +1214,7 @@ services:
       - port: 6379
         targetPort: 6379
         name: "redis-port"
-        serviceType: "ClusterIP"  # ✅ Corrigido, antes estava errado como "ClusterPort"
+        serviceType: "ClusterIP"  
     labels:
       app: "redis"
       env: "labs"
@@ -1248,7 +1246,7 @@ locust:
 {{- define "giropops.labels" -}}
 app: {{ $.Chart.Name | default "giropops-app" }}
 release: {{ $.Release.Name }}
-env: {{ (index $.Values "global" "environment") | default "dev" }}  # ✅ Evita erro se "global" não existir
+env: {{ (index $.Values "global" "environment") | default "dev" }}  
 {{- end }}
 
 {{- define "giropops.image" -}}
