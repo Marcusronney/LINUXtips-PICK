@@ -1,5 +1,7 @@
 # Projeto final do Programa Intensivo em Containers e Kubernetes | PICK LINUXtips 
 
+![pick](images/pick.png)
+
 O Projeto final consite na resolução do [desafio PICK 2024_01](https://github.com/badtuxx/LINUXtips-PICK-24_01) proposto pelo [@Badtuxx](https://github.com/badtuxx). O desafio consiste em um projeto prático de DevOps focado na aplicação de gestão de senhas [Giropops-Senhas](https://github.com/badtuxx/giropops-senhas). O projeto exige Stacks com ferramentas de containerização, orquestração, segurança e monitoramento, com foco em ambientes seguros, CI/CD,  automatizados e observáveis com alta disponibilidade.
 
 **Objetivos principais:**
