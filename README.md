@@ -690,7 +690,7 @@ Ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
 ![Kubernetes](https://img.icons8.com/?size=100&id=cvzmaEA4kC0o&format=png&color=000000)
 
 Arquitetura do Kubernetes:
-```
+
 Componente	| Função |
 | Cluster |	Conjunto de máquinas (nodes) onde os containers rodam|
 |Master Node	| Onde roda o “cérebro” do Kubernetes (API, scheduler, controller)|
@@ -701,7 +701,7 @@ Componente	| Função |
 |Ingress	| Regras de roteamento HTTP/HTTPS externas|
 |ConfigMap / Secret	| Injeção de configs e dados sensíveis|
 Namespace	Isolamento lógico entre aplicações|
-```
+
 
 **Buildando a imagem no Kubernetes com KinD.**
 
@@ -819,7 +819,7 @@ spec:
   - protocol: TCP
     port: 5000
     targetPort: 5000
-    nodePort: 32000  # Escolha uma porta diferente
+    nodePort: 32000  
 ```
 
 redis-deployment.yaml
