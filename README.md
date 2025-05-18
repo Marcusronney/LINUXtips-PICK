@@ -684,23 +684,13 @@ Agora possuo uma imagem Ultra-minimalista com apenas 20 MB e com uma superfície
 
 # Kubernetes
 
-Kubernetes (também chamado de K8s) é uma plataforma open-source de orquestração de containers.
-Ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
+Kubernetes (também chamado de K8s) é uma plataforma open-source de orquestração de containers, ele automatiza o deploy, o scaling e a gestão de aplicações containerizadas.
+Em melhor palavras, atua como um sistema de orquestração, agrupando contêineres em pods para facilitar o escalamento e a descoberta de serviços. 
+
+Com o uso do K8S, possuímos os benefícios de Maior velocidade na gestão dos Containers permitindo a criação de plataformas eficientes e rápidas, com a flexibilidade de multiplos ambientes e economizando o máximo de recursos.
+
 
 ![Kubernetes](https://img.icons8.com/?size=100&id=cvzmaEA4kC0o&format=png&color=000000)
-
-Arquitetura do Kubernetes:
-
-Componente	| Função |
-| Cluster |	Conjunto de máquinas (nodes) onde os containers rodam|
-|Master Node	| Onde roda o “cérebro” do Kubernetes (API, scheduler, controller)|
-|Worker Nodes |	Onde os containers são executados|
-|Pod	| A menor unidade de execução: 1 ou mais containers agrupados|
-|Deployment	| Gerencia a criação/atualização de múltiplos pods|
-|Service	| Exposição de pods por IP fixo / load balancing|
-|Ingress	| Regras de roteamento HTTP/HTTPS externas|
-|ConfigMap / Secret	| Injeção de configs e dados sensíveis|
-Namespace	Isolamento lógico entre aplicações|
 
 
 **Buildando a imagem no Kubernetes com KinD.**
@@ -751,19 +741,19 @@ kubectl get pods -A
 
 Agora podemos visualizar a menor unidade do nosso Cluster Kubernetes, os PODs, em resumo:
 
-coredns (2 pods)	DNS interno do cluster
+coredns = DNS interno do cluster
 
-etcd	Banco de dados do cluster
+etcd	= Banco de dados do cluster
 
-kube-apiserver	API principal do Kubernetes
+kube-apiserver =	API principal do Kubernetes
 
-kube-controller-manager	Controlador de recursos
+kube-controller-manager	= Controlador de recursos
 
-kube-scheduler	Agenda pods nos nodes
+kube-scheduler	= Agenda pods nos nodes
 
-kube-proxy (2 pods)	Regras de rede por node
+kube-proxy = Regras de rede por node
 
-kindnet (2 pods)	CNI de rede do KinD
+kindnet =	CNI de rede do KinD
 
 Conseguimos visualizar a saúde do nosso Cluster, todos os Pods necessários para o cluster funcionar estão rodando perfeitamente na namespace kube-system.
 
@@ -1457,7 +1447,7 @@ data:
 
 Dev:
 ```
-helm upgrade --install giropops-dev . \
+helm install --install giropops-dev . \
   --namespace dev \
   --values values-dev.yaml
 ```
@@ -1469,7 +1459,7 @@ helm install giropops-staging . \
 ```
 Prod:
 ```
-helm upgrade --install giropops-prod . \
+helm install --install giropops-prod . \
   --namespace prod \
   --values values-prod.yaml
 ```
@@ -1672,19 +1662,17 @@ Note que o meu **ingress-nginx-controller** está como Type **NodePort**. Isso i
 
 O Trafego está da seguinte maneira:
 ```
-[ Navegador/Curl ] 
+[ Navegador] 
      ↓
-http://localhost:32080 (NodePort)
+http://prod.giropopssenhas.local)
      ↓
 [ ingress-nginx-controller Service ]
      ↓
-Ingress Controller (NGINX Pod)
+Pod Ingress Controller
      ↓
-Ingress Rule
+Regra Ingress para apontar para o deployment
      ↓
-Backend Service (ex: giropops-senhas)
-     ↓
-Pod (aplicação rodando)
+Giropops-senhas
 ```
 
 
@@ -1748,7 +1736,7 @@ Exemplo: Utiliza métricas definidas em "resource" e "requests" dos containers p
 Para o HPA funcionar, é necessário o Metrics Server instalado no Cluster.
 
 ### METRICS SERVER
-r
+
 **[METRICS SERVER](https://github.com/kubernetes-sigs/metrics-serve)** é um agregador de métricas de recursos de sistemas, que coleta métricas como uso de CPU e memória dos nós e pods no Cluster.
 Essas métricas são utilizadas no HPA para fazer o escalonamento dos Pods.
 
@@ -2052,7 +2040,7 @@ Locust acessado, irei simular um teste de carga.
 
 **Teste: a cada segundo, 20 novos usuários começam a usar a aplicação até chegar em 1000 usuários.**
 
-![Title](imagens/locust/locust.png)
+![Title](imagens/locust/locust2.png)
 
 ![Title](imagens/locust/locustexec.png)
 
@@ -2061,6 +2049,8 @@ Aqui podemos ver o HPA entrando em ação após o estresse do Locust, Os Pods ex
 a criar novos Pods.
 
 ![Title](imagens/locust/podescalando.png)
+
+No gráfico, podemos notar o aumento dos números de usuários e o tempo de requisição subindo.
 
 ![Title](imagens/locust/dados.png)
 
