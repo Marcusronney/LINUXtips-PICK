@@ -7,8 +7,8 @@ on:
       - develop
       - staging
     paths:
-      - '**/*.yaml'  # Dispara só se mudar arquivos .yaml
-  workflow_dispatch:  # Permite execução manual (produção)
+      - '**/*.yaml'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -30,26 +30,40 @@ jobs:
           pwd
           ls -laR
 
+      - name: Verificar assinatura da imagem
+        run: |
+          echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
+          cosign verify --key cosign.pub docker.io/linuxtips/giropops-senhas:1.0 || echo "⚠️ Imagem ainda não assinada."
+
+      - name: Assinar imagem com Cosign (se necessário)
+        run: |
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          echo "${{ secrets.COSIGN_PASSWORD }}" > cosign.pass
+          export COSIGN_PASSWORD=$(cat cosign.pass)
+          cosign sign --key cosign.key --yes docker.io/linuxtips/giropops-senhas:1.0
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+
       - name: Deploy para DEV
         if: github.ref == 'refs/heads/develop'
         run: |
           helm upgrade --install giropops-dev ${{ github.workspace }} \
-          --namespace dev \
-          -f ${{ github.workspace }}/values-dev.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
-          
+            --namespace dev \
+            -f ${{ github.workspace }}/values-dev.yaml \
+            --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+
       - name: Deploy para STAGING
         if: github.ref == 'refs/heads/staging'
         run: |
           helm upgrade --install giropops-staging ${{ github.workspace }} \
-          --namespace staging \
-          -f ${{ github.workspace }}/values-staging.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+            --namespace staging \
+            -f ${{ github.workspace }}/values-staging.yaml \
+            --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
 
       - name: Deploy para PRODUÇÃO (manual)
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         run: |
           helm upgrade --install giropops-prod ${{ github.workspace }} \
-          --namespace prod \
-          -f ${{ github.workspace }}/values-prod.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+            --namespace prod \
+            -f ${{ github.workspace }}/values-prod.yaml \
+            --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
