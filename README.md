@@ -974,8 +974,109 @@ appVersion: "1.0"
 deployments:
   giropops-senhas:
     name: "giropops-senhas"
-    image: "linuxtips/giropops-senhas:1.0"
+    image: "geforce8400gsd/giropops-senhas:latest"
     replicas: 1
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "NodePort"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "350m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+
+  redis:
+    name: "redis"
+    image: "redis"
+    replicas: 1
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+
+services:
+  giropops-senhas:
+    ports:
+      - port: 5000
+        targetPort: 5000
+        name: "giropops-senhas-port"
+        serviceType: "ClusterIP"
+        NodePort: 32500
+      - port: 8088
+        targetPort: 8088
+        name: "giropops-senhas-metrics"
+        serviceType: "ClusterIP"
+    labels:
+      app: "giropops-senhas"
+      env: "labs"
+      live: "true"
+
+  redis:
+    ports:
+      - port: 6379
+        targetPort: 6379
+        name: "redis-port"
+        serviceType: "ClusterIP"
+    labels:
+      app: "redis"
+      env: "labs"
+      live: "true"
+
+hpa:
+  enabled: true  # Define se o HPA será criado
+  minReplicas: 1
+  maxReplicas: 3
+  cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
+  memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
+  targetDeployment: giropops-senhas
+
+locust:
+  enabled: true  # Habilita ou desabilita o Locust
+  image: "linuxtips/locust-giropops:1.0"
+  replicas: 1
+  service:
+    type: NodePort  # Pode ser LoadBalancer na nuvem
+    port: 8089
+  scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
+
+
+ingress:
+  enabled: true
+  host: prod.giropops.local
+  serviceName: giropops-senhas-giropops-senhas-port
+  servicePort: 5000
+  allowIpAccess: false
+  tlsSecretName: giropops-tls  # Secret TLS emitido pelo cert-manager
+  issuerName: giropops-ca-issuer
+````
+
+/ values-staging.yaml
+````
+deployments:
+  giropops-senhas:
+    name: "giropops-senhas"
+    image: "geforce8400gsd/giropops-senhas:latest"
+    replicas: 3
     ports:
       - port: 5000
         targetPort: 5000
@@ -1020,7 +1121,7 @@ services:
       - port: 5000
         targetPort: 5000
         name: "giropops-senhas-port"
-        serviceType: "LoadBalancer"
+        serviceType: "ClusterIP"
         NodePort: 32500
       - port: 8088
         targetPort: 8088
@@ -1046,8 +1147,9 @@ hpa:
   enabled: true  # Define se o HPA será criado
   minReplicas: 1
   maxReplicas: 1
-  cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
+  cpuUtilization: 70  # Escala se a CPU ultrapassar 50%
   memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
+  targetDeployment: giropops-senhas
 
 locust:
   enabled: true  # Habilita ou desabilita o Locust
@@ -1057,96 +1159,13 @@ locust:
     type: NodePort  # Pode ser LoadBalancer na nuvem
     port: 8089
   scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
-````
 
-/ values-staging.yaml
-````
-deployments:
-  giropops-senhas:
-    name: "giropops-senhas"
-    image: "linuxtips/giropops-senhas:1.0"
-    replicas: 2
-    ports:
-      - port: 5000
-        targetPort: 5000
-        name: "giropops-senhas-port"
-        serviceType: "NodePort"
-        NodePort: 32500
-      - port: 8088
-        targetPort: 8088
-        name: "giropops-senhas-metrics"
-        serviceType: "ClusterIP"
-    labels:
-      app: "giropops-senhas"
-      env: "labs"
-      live: "true"
-    resources:
-      requests:
-        memory: "32Mi"
-        cpu: "250m"
-      limits:
-        memory: "64Mi"
-        cpu: "500m"
-
-  redis:
-    name: "redis"
-    image: "redis"
-    replicas: 1
-    labels:
-      app: "redis"
-      env: "labs"
-      live: "true"
-    resources:
-      requests:
-        memory: "32Mi"
-        cpu: "250m"
-      limits:
-        memory: "64Mi"
-        cpu: "500m"
-
-services:
-  giropops-senhas:
-    ports:
-      - port: 5000
-        targetPort: 5000
-        name: "giropops-senhas-port"
-        serviceType: "LoadBalancer"
-        NodePort: 32500
-      - port: 8088
-        targetPort: 8088
-        name: "giropops-senhas-metrics"
-        serviceType: "ClusterIP"
-    labels:
-      app: "giropops-senhas"
-      env: "labs"
-      live: "true"
-
-  redis:
-    ports:
-      - port: 6379
-        targetPort: 6379
-        name: "redis-port"
-        serviceType: "ClusterIP"  
-    labels:
-      app: "redis"
-      env: "labs"
-      live: "true"
-
-hpa:
-  enabled: true  # Define se o HPA será criado
-  minReplicas: 1
-  maxReplicas: 1
-  cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
-  memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
-
-locust:
-  enabled: true  # Habilita ou desabilita o Locust
-  image: "linuxtips/locust-giropops:1.0"
-  replicas: 1
-  service:
-    type: NodePort  # Pode ser LoadBalancer na nuvem
-    port: 8089
-  scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
+ingress:
+  enabled: true
+  host: staging.giropops.local
+  serviceName: giropops-senhas-giropops-senhas-port
+  servicePort: 5000
+  allowIpAccess: true
 ````
 
 / values-dev.yaml
@@ -1154,8 +1173,8 @@ locust:
 deployments:
   giropops-senhas:
     name: "giropops-senhas"
-    image: "linuxtips/giropops-senhas:1.0"
-    replicas: 2
+    image: "geforce8400gsd/giropops-senhas:latest"
+    replicas: 1
     ports:
       - port: 5000
         targetPort: 5000
@@ -1200,7 +1219,7 @@ services:
       - port: 5000
         targetPort: 5000
         name: "giropops-senhas-port"
-        serviceType: "LoadBalancer"
+        serviceType: "ClusterIP"
         NodePort: 32500
       - port: 8088
         targetPort: 8088
@@ -1216,27 +1235,43 @@ services:
       - port: 6379
         targetPort: 6379
         name: "redis-port"
-        serviceType: "ClusterIP"  
+        serviceType: "ClusterIP" 
     labels:
       app: "redis"
       env: "labs"
       live: "true"
 
+configMap:
+  name: "locust-config"
+  namespace: "dev"
+  data:
+    REDIS_HOST: "redis"
+    REDIS_PORT: "6379"
+
+
 hpa:
-  enabled: true  # Define se o HPA será criado
+  enabled: false  # Define se o HPA será criado
   minReplicas: 1
   maxReplicas: 1
   cpuUtilization: 50  # Escala se a CPU ultrapassar 50%
   memoryUtilization: 70  # Escala se a Memória ultrapassar 70%
 
 locust:
-  enabled: true  # Habilita ou desabilita o Locust
-  image: "linuxtips/locust-giropops:1.0"
+  enabled: false  # Habilita ou desabilita o Locust
+  image: "geforce8400gsd/giropops-senhas:latest"
   replicas: 1
   service:
     type: NodePort  # Pode ser LoadBalancer na nuvem
     port: 8089
   scriptConfigMap: "locust-scripts"  # Nome do ConfigMap com o locustfile.py
+
+
+ingress:
+  enabled: true
+  host: dev.giropops.local
+  serviceName: giropops-senhas-giropops-senhas-port
+  servicePort: 5000
+  allowIpAccess: true
 ````
 
 /templates/ _helpers.tpl
@@ -1248,7 +1283,7 @@ locust:
 {{- define "giropops.labels" -}}
 app: {{ $.Chart.Name | default "giropops-app" }}
 release: {{ $.Release.Name }}
-env: {{ (index $.Values "global" "environment") | default "dev" }}  
+env: {{ (index $.Values "global" "environment") | default "dev" }}  # ✅ Evita erro se "global" não existir
 {{- end }}
 
 {{- define "giropops.image" -}}
