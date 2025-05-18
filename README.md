@@ -932,7 +932,7 @@ Definindo a estrutura do Projeto.
 ```
 giropops-senhas/
 ├── Chart.yaml
-├── values.yaml (base)
+├── values-prod.yaml
 ├── values-dev.yaml
 ├── values-prod.yaml
 ├── templates/
@@ -974,7 +974,7 @@ appVersion: "1.0"
 deployments:
   giropops-senhas:
     name: "giropops-senhas"
-    image: "geforce8400gsd/giropops-senhas:latest"
+    image: "geforce8400gsd/giropops-senhas:1.0"
     replicas: 1
     ports:
       - port: 5000
@@ -1068,6 +1068,7 @@ ingress:
   allowIpAccess: false
   tlsSecretName: giropops-tls  # Secret TLS emitido pelo cert-manager
   issuerName: giropops-ca-issuer
+
 ````
 
 / values-staging.yaml
@@ -1166,6 +1167,7 @@ ingress:
   serviceName: giropops-senhas-giropops-senhas-port
   servicePort: 5000
   allowIpAccess: true
+
 ````
 
 / values-dev.yaml
@@ -1283,7 +1285,7 @@ ingress:
 {{- define "giropops.labels" -}}
 app: {{ $.Chart.Name | default "giropops-app" }}
 release: {{ $.Release.Name }}
-env: {{ (index $.Values "global" "environment") | default "dev" }}  # ✅ Evita erro se "global" não existir
+env: {{ (index $.Values "global" "environment") | default "dev" }} 
 {{- end }}
 
 {{- define "giropops.image" -}}
@@ -2120,7 +2122,20 @@ Verificando assinatura:
 cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:latest
 ```
 
-### Secret - Cosign
+## Secret - Cosign - Chave para o Kyverno verificar imagens assinadas.
+
+O **kubectl create secret** armazena a chave pública Cosign em um Secret no Kubernetes, para que o 
+Kyverno consiga usá-la ao validar imagens assinadas.
+
+Na ClusterPolicy **verificando-assinaturas-images-cosign**, foi passado o parametro **key: "k8s://cert-manager/cosign-pub"**. Isso significa que o Kyverno vai tentar carregar o Secret chamado cosign-pub no namespace cert-manager.
+
+
+
+```
+kubectl create secret generic cosign-pub \
+  --from-file=cosign.pub=/home/pick/PICK/.github/cosign/cosign.pub \
+  -n cert-manager
+```
 
 
 ```
@@ -2724,6 +2739,55 @@ spec:
                 memory: "?*" #Obrigatório uso de argumento para Memóri
 ````
 
+### RoleBinding - Kyverno
+**role.yaml**
+
+Na Policy **verificando-assinaturas-images** ela precisa encontrar a chave pública do COSIGN que está na namespace cert-manager
+para poder verificar as assinaturas de imagem através do parametro **key: "k8s://cert-manager/cosign-pub"**. 
+
+Na Policy ***role.yaml*** dou permissão ao Kyverno de acesso aos Secrets no namespace cert-manager.
+
+````
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: cert-manager
+  name: kyverno-cosign-reader
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kyverno-cosign-reader-binding
+  namespace: cert-manager
+subjects: #Dá essas permissões para o Kyverno
+- kind: ServiceAccount
+  name: kyverno-admission-controller
+  namespace: kyverno
+roleRef:
+  kind: Role
+  name: kyverno-cosign-reader
+  apiGroup: rbac.authorization.k8s.io
+````
+
+```
+kubectl apply -f role.yaml 
+```
+![Title](imagens/kyverno/role.png)
+
+
+Agora o Kyverno possuí acesso ao cert-manager. Irei testar o acesso com **kubectl get rolebinding**.
+```
+kubectl get rolebinding kyverno-cosign-reader-binding -n cert-manager
+```
+
+Em resumo: Concendi ao ServiceAccount **kyverno-admission-controller** no namespace **kyverno** a permissão de usar a **Role kyverno-cosign-reader**, que permite ler Secrets no namespace **cert-manager**.
+
+![Title](imagens/kyverno/rolebinding.png)
+
 Aplicando as Policys:
 ````
 kubectl apply -f verificando-assinaturas-images-cosign.yaml
@@ -2731,6 +2795,7 @@ kubectl apply -f desabilitando-root.yaml
 kubectl apply -f bloqueando-env.yaml
 kubectl apply -f compliance.yaml
 kubectl apply -f resources-limits.yaml
+kubectl apply -f role.yaml
 ````
 
 
@@ -2742,7 +2807,6 @@ kubectl apply -f resources-limits.yaml
 
 
 ### Realizando testes de Policys.
-
 No diretório /kyverno/testes-Policys, criei alguns manifestos para testar as policys aplicadas.
 
 Note que o deploy foi bloqueado por conta das regras **compliance**, **desabilitando-root** e **resources-limits**.
@@ -2753,6 +2817,20 @@ Note que o deploy foi bloqueado por conta das regras **compliance**, **desabilit
 Outros exemplos do Kyverno entrando em ação:
 
 ![Title](imagens/kyverno/testcompliance.png)
+
+Aqui, tento atualizar o ambiente de produção com a imagem **docker.io/geforce8400gsd/giropops-senhas:latest**
+e o deploy é bloqueado pela Policy **verificando-assinaturas-images**. Essa Policy não permite imagens Latest.
+
+![Title](imagens/kyverno/teste1.png)
+
+Agora usei a tag **:1.0** ao invés de **:latest** na imagem de values-prod.yaml. **image: "geforce8400gsd/giropops-senhas:1.0"**
+
+Deploy:
+
+![Title](imagens/kyverno/deploy_prod.png)
+
+Ao respeitar todas as Policys, o deploy foi realizado com sucesso!
+
 
 --------------------
 
@@ -2769,26 +2847,135 @@ Outros exemplos do Kyverno entrando em ação:
 
 ![github](https://img.icons8.com/?size=100&id=3tC9EQumUAuq&format=png&color=000000)
 
-No repositório, foi criado 3 Branch, main = Produção, dev = Desenvolvimento e Staing = Testes.
+Minha Pipeline de CI/CD está sendo gerenciada pelo Github Actions, como meu server está sendo
+executando em uma rede local privada, optei por usar o Runner Local para se conectar ao Repositório do GitHub.
 
-Runner no Cluster Local:
+
+### Provisionando o Server para CI/CD com Github Actions Runners Localmente.
+
+
+Como o CI/CD está sendo feito?
+
+Objetivo:
+
+    Verifica assinatura da imagem com Cosign
+
+    Assina automaticamente se necessário
+
+    Realiza deploy via helm upgrade --install para:
+
+        dev (branch: develop)
+
+        staging (branch: staging)
+
+        prod (branch: main, somente com acionamento manual)
+
+
+
+**Secrets**
+
+Dentro do Repo, foi passado 2 valores de Secrets, COSIGN_KEY e COSIGN_PASSWORD. Esees secrets contém a Chave para assinatura das imagens do Cosign e a senha.
+
+
+O usuário do Runner precisa ter efetuado login no Docker Hub, assim o acesso estará salvo em **/home/github-runner/.docker/config.json**.
+
+O Git já está instalado no Server e a conexão via SSH foi efetuada com sucesso.
+````
+-Login GitHub
+git config --global user.name 
+git config --global user.email 
+
+-Gerando as chaves para conectar via SSH
+ssh-keygen -t idcode -C e-mail
+````
+
+````
+Apos conexão, verifique a conexão vis SSH.
+ssh -T git@github.com
+
+As chaves foram armazenadas em ~/.ssh/config
+
+nano ~/.ssh/config
+Host github.com
+    HostName host
+    IdentityFile /home/pick/giropops-senhas/cert
+    User usuário
+
+Verificando a chave: ssh-add -l
+
+Parametros passados em sshd_config:
+nano /etc/ssh/sshd_config
+  PermitRootLogin yes
+  PubkeyAuthentication yes
+  AuthorizedKeysFile .ssh/authorized_keys
+  ChallengeResponseAuthentication no
+  UsePAM yes
+
+  Reiniciando sshd: systemctl restart sshd
+````
+
+GitHub Actions Runner Local:
+
+Para executar o Runner localmente, é necessário criar um usuário não-root para executar o Runner.
+````
+useradd -m -s /bin/bash github-runner
+````
+Configurando acesso ao repositório:
+````
+./config.sh --url https://github.com/Marcusronney/PICK-2024 --token AO3ISEKIGKAETKLIZBVFAODH3NOCA
+````
+
+Criei um Service para executar o run.sh, assim não será necessário rodar o script manualmente.
+
+nano /etc/systemd/system/github-runner.service
+````
+[Unit]
+Description=GitHub Actions Runner
+After=network.target
+
+[Service]
+ExecStart=/opt/actions-runner/run.sh
+User=github-runner
+WorkingDirectory=/opt/actions-runner
+Restart=always
+
+[Install]
+WantedBy=default.target
+````
+
+Coloquei o Service para ser executado automaticamente, reiniciei os Daemons e dei permissão ao usuário do Runner para executar o Docker.
+````
+systemctl daemon-reload
+systemctl enable github-runner
+
+usermod -aG docker github-runner
+````
+Instalando Runner Local:
 ````
 mkdir /opt/actions-runner && cd /opt/actions-runner
-curl -o actions-runner-linux-x64.tar.gz -L https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz
-tar xzf actions-runner-linux-x64.tar.gz
-````
-Kubeconfig para usuário Runner:
-````
-mkdir -p /home/github-runner/.kube
-cp /root/.kube/config /home/github-runner/.kube/config
-chown -R github-runner:github-runner /home/github-runner/.kube
+curl -O -L https://github.com/actions/runner/releases/download/v2.x/actions-runner-linux-x64-2.x.tar.gz
+tar xzf actions-runner-linux-x64-2.x.tar.gz
+./config.sh --url https://github.com/<user>/<repo> --token <TOKEN>
+./svc.sh install && ./svc.sh start
 ````
 
-O pipeline roda automaticamente quando houver git push nos branch.
-
-workflow:
+Neste campo, estou provisioanndo o usuário do Runner para ter acesso as chaves do Cosign, assim podendo fazer as assinaturas via CI/CD.
 ````
-name: CI/CD - Helm Upgrade Kubernetes (Dev, Staging, Prod)
+mkdir -p /home/github-runner/.cosign
+cp /home/pick/PICK/cosign/cosign.key /home/github-runner/.cosign/
+chown github-runner:github-runner /home/github-runner/.cosign/cosign.key
+chmod 600 /home/github-runner/.cosign/cosign.key
+````
+
+
+### WORKFLOW
+
+Automatizando o processo de validação de imagem Docker e deploy em cluster Kubernetes 
+via Helm, de forma separada por ambiente (dev, staging, prod), garantindo que somente 
+imagens assinadas possam ser aplicadas.
+
+```
+name: CI/CD - Helm CI/CD (Dev, Staging, Prod)
 
 on:
   push:
@@ -2797,8 +2984,8 @@ on:
       - develop
       - staging
     paths:
-      - '**/*.yaml'  # Dispara só se mudar arquivos .yaml
-  workflow_dispatch:  # Permite execução manual (produção)
+      - '**/*.yaml'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -2820,36 +3007,106 @@ jobs:
           pwd
           ls -laR
 
+      - name: Verificar assinatura da imagem
+        run: |
+          echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
+          cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0|| echo " Imagem ainda não assinada."
+
+      - name: Assinar imagem com Cosign (se necessário)
+        run: |
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          echo "${{ secrets.COSIGN_PASSWORD }}" > cosign.pass
+          export COSIGN_PASSWORD=$(cat cosign.pass)
+          cosign sign --key cosign.key --yes docker.io/geforce8400gsd/giropops-senhas:1.0
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+
       - name: Deploy para DEV
         if: github.ref == 'refs/heads/develop'
         run: |
           helm upgrade --install giropops-dev ${{ github.workspace }} \
-          --namespace dev \
-          -f ${{ github.workspace }}/values-dev.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
-          
+            --namespace dev \
+            -f ${{ github.workspace }}/values-dev.yaml \
+            --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:latest
+
       - name: Deploy para STAGING
         if: github.ref == 'refs/heads/staging'
         run: |
           helm upgrade --install giropops-staging ${{ github.workspace }} \
-          --namespace staging \
-          -f ${{ github.workspace }}/values-staging.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+            --namespace staging \
+            -f ${{ github.workspace }}/values-staging.yaml \
+            --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
 
       - name: Deploy para PRODUÇÃO (manual)
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         run: |
           helm upgrade --install giropops-prod ${{ github.workspace }} \
-          --namespace prod \
-          -f ${{ github.workspace }}/values-prod.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+            --namespace prod \
+            -f ${{ github.workspace }}/values-prod.yaml \
+            --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
+
+```
+
+Aqui, defino a execução do runner direto no server.
+````
+jobs:
+  deploy:
+    runs-on: self-hosted
+`````
+
+
+Efetuando a clonagem do repo.
+````
+- name: Checkout do Código
+  uses: actions/checkout@v4
+````
+
+Aqui, estou verificando se o Runner possuí acesso ao cluster com kubectl cluster-info e kubectl get nodes.
+````
+- name: Configurar kubectl
+  run: |
+    export KUBECONFIG=/home/github-runner/.kube/config
+    kubectl cluster-info
+    kubectl get nodes
 ````
 
 
+Cosign - Verificando se a imagem está assinada, se não validar a assinatura, imprime o erro *Imagem ainda não assinada*.
+````
+- name: Verificar assinatura da imagem
+  run: |
+    echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
+    cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0 || echo " Imagem ainda não assinada."
+````
+
+Assinando imagens, como passei os Secrets das Key para o Secret do repositório, a chave será usada para assinar a imagem.
+````
+- name: Assinar imagem com Cosign
+
+cosign sign --key cosign.key docker.io/geforce8400gsd/giropops-senhas:1.0
+````
 
 
+Deploy do Pipeline:
 
+Ambiente Dev: Executa somente se o push for no ambiente de Desenvolvimento.
+````
+if: github.ref == 'refs/heads/develop'
+helm upgrade --install giropops-dev ... --namespace dev -f values-dev.yaml
+````
 
+Ambiente Staging: Executa somente se o push for no ambiente de Teste.
+````
+if: github.ref == 'refs/heads/staging'
+helm upgrade --install giropops-staging ... --namespace staging -f values-staging.yaml
+````
+
+Ambiente de Produção: Executado manualmente para evitar pushs errados.
+````
+if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+helm upgrade --install giropops-prod ... --namespace prod -f values-prod.yaml
+
+````
 
 
 
