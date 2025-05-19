@@ -1,0 +1,6 @@
+apiVersion: v2
+name: giropops-senhas
+description: Helm chart para automatizar o deployment da aplicação giropops-senhas
+type: application
+version: 0.1.0
+appVersion: "1.0"
