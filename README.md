@@ -22,7 +22,7 @@ O Projeto final consite na resolução do [desafio PICK 2024_01](https://github.
 
 ### Tecnologias envolvidas no projeto:
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white&style=for-the-badge)
+![Python](https://img.shields.io/badge/Python?logo=python&logoColor=white&style=for-the-badge)
 ![Redis](https://img.shields.io/badge/Redis-DB%20Cache-red?logo=redis&logoColor=white&style=for-the-badge)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black?logo=flask&logoColor=white&style=for-the-badge)
 ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white&style=for-the-badge)
