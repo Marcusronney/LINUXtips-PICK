@@ -2,7 +2,7 @@ deployments:
   giropops-senhas:
     name: "giropops-senhas"
     image: "geforce8400gsd/giropops-senhas:latest"
-    replicas: 4
+    replicas: 2
     ports:
       - port: 5000
         targetPort: 5000
