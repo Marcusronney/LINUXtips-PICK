@@ -1522,9 +1522,7 @@ Ingress Controller (NGINX)
      ↓
 Ingress Rule (roteamento)
      ↓
-Service (ex: giropops-senhas)
-     ↓
-Pod (sua aplicação Flask ou FastAPI ou NodeJS etc)
+Service giropops-senhas
 
 ```
 
@@ -2144,9 +2142,9 @@ kubectl create secret generic cosign-pub \
 ```
 Componente	Função
 Prometheus	Coleta e armazena métricas (CPU, memória, requests, etc.)
-Grafana	Interface para dashboards lindões 🎨
-Alertmanager	Envia alertas (Slack, email, etc)
-Node Exporter	Exporta métricas do nó (CPU/disk/etc.)
+Grafana	Dashboards
+Alertmanager	Envia alertas
+Node Exporter	Exporta métricas do nó
 kube-state-metrics	Métricas do estado dos recursos K8s
 Prometheus Operator	Facilita deploys de Prometheus via CRDs
 ```
@@ -2161,7 +2159,7 @@ Criando Namespace:
 ````
 kubectl create namespace monitoring
 ````
-Agora irei iniciar a instalação do *kube prometheus stack* na namespace *monitoring*.
+Agora irei iniciar a instalação do *kube prometheus stack* na namespace *monitoring*. Por conta de limitações de hardware, irei definir os limites de memória em 120Mi e CPU 100m.
 ```
 helm install kube-prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
@@ -2294,6 +2292,19 @@ Prometheus e Grafana acessados com sucesso.
 ![Title](imagens/monitoring/prografana.png)
 
 
+### Dashboard - Cluster Kubernetes
+
+
+Aqui consigo visualizar as métricas do meu ambiente, 35 Pods, 87 Containers.
+![Title](imagens/monitoring/kubelet.png)
+
+![Title](imagens/monitoring/metric.png)
+
+![Title](imagens/monitoring/node1.png)
+
+![Title](imagens/monitoring/prod.png)
+
+![Title](imagens/monitoring/kubesystem.png)
 
 
 
@@ -2316,7 +2327,7 @@ kubectl get all --namespace cert-manager
 ![Title](imagens/cert-manager/cert.png)
 
 
-Em ambientes locais como o Kind, irei usar o **SelfSigned** para emitir os certificado pois meu cluster local não DNS público nem acesso externo pela WAN. Certificados Self-Singed são certificados auto assinados pelo Cluster, basicamente o Cluster vira uma CA.
+Em ambientes locais como o Kind, irei usar o **SelfSigned** para emitir os certificado pois meu cluster local não DNS público nem acesso externo pela WAN. Certificados Self-Singed são certificados auto assinados pelo Cluster, basicamente o Cluster vira uma CA (Autoridade Certificadora).
 
 
 Nesta etapa, estou definindo um manifesto para deploy do Issue selfSigned + Certificado CA.
@@ -2349,7 +2360,7 @@ spec:
 
 
 Agora irei criar o manifesto Issue do tipo CA.
-Esse Issuer permite que o cert-manager emita certificados TLS usando uma CA (Autoridade Certificadora) 
+Esse Issuer permite que o cert-manager emita certificados TLS usando uma CA
 existente, que está armazenada no cluster dentro de um Secret TLS.
 
 **inssuer-ca.yaml**
@@ -2569,7 +2580,7 @@ spec:
         - imageReferences:
             - "docker.io/geforce8400gsd/*"
           key: "k8s://cert-manager/cosign-pub"
-          attestations: [] #Neste campo, estamos definindo que a chave está no cluster, o namespace onde procurar e o nome da chave.
+          attestations: [] #Neste campo, defini que a chave está no cluster, o namespace onde procurar e o nome da chave.
 ```
 
 ### desabilitando-root.yaml
@@ -2845,8 +2856,6 @@ executando em uma rede local privada, optei por usar o Runner Local para se cone
 
 
 Como o CI/CD está sendo feito?
-
-Objetivo:
 
     Verifica assinatura da imagem com Cosign
 
