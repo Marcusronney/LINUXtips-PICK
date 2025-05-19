@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: cert-manager
+  name: kyverno-cosign-reader
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kyverno-cosign-reader-binding
+  namespace: cert-manager
+subjects:
+- kind: ServiceAccount
+  name: kyverno-admission-controller
+  namespace: kyverno
+roleRef:
+  kind: Role
+  name: kyverno-cosign-reader
+  apiGroup: rbac.authorization.k8s.io
