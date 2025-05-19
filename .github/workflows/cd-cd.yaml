@@ -33,7 +33,7 @@ jobs:
       - name: Verificar assinatura da imagem
         run: |
           echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
-          cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0|| echo "⚠️ Imagem ainda não assinada."
+          cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0 || echo "⚠️ Imagem ainda não assinada."
 
       - name: Assinar imagem com Cosign (se necessário)
         run: |
@@ -47,23 +47,23 @@ jobs:
       - name: Deploy para DEV
         if: github.ref == 'refs/heads/develop'
         run: |
-          helm upgrade --install giropops-dev ${{ github.workspace }} \
+          helm upgrade --install giropops-dev ${{ github.workspace }}/Helm \
             --namespace dev \
-            -f ${{ github.workspace }}/values-dev.yaml \
+            -f ${{ github.workspace }}/Helm/values-dev.yaml \
             --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
 
       - name: Deploy para STAGING
         if: github.ref == 'refs/heads/staging'
         run: |
-          helm upgrade --install giropops-staging ${{ github.workspace }} \
+          helm upgrade --install giropops-staging ${{ github.workspace }}/Helm \
             --namespace staging \
-            -f ${{ github.workspace }}/values-staging.yaml \
+            -f ${{ github.workspace }}/Helm/values-staging.yaml \
             --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
 
       - name: Deploy para PRODUÇÃO (manual)
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         run: |
-          helm upgrade --install giropops-prod ${{ github.workspace }} \
+          helm upgrade --install giropops-prod ${{ github.workspace }}/Helm \
             --namespace prod \
-            -f ${{ github.workspace }}/values-prod.yaml \
+            -f ${{ github.workspace }}/Helm/values-prod.yaml \
             --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
