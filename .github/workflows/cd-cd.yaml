@@ -33,7 +33,7 @@ jobs:
       - name: Verificar assinatura da imagem
         run: |
           echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
-          cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0 || echo "⚠️ Imagem ainda não assinada."
+          cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0 || echo " Imagem ainda não assinada."
 
       - name: Assinar imagem com Cosign (se necessário)
         run: |
