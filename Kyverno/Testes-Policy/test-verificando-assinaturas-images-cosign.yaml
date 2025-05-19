@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-nao-assinado
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nao-assinado
+  template:
+    metadata:
+      labels:
+        app: nao-assinado
+    spec:
+      containers:
+        - name: app
+          image: nginx:latest
+          ports:
+            - containerPort: 80
