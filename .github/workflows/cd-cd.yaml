@@ -1,18 +1,19 @@
-name: CI/CD - Deploy Kubernetes (Dev, Staging, Prod)
+name: CI/CD - Helm Upgrade Kubernetes (Dev, Staging, Prod)
 
 on:
   push:
     branches:
       - main
       - develop
+      - staging
     paths:
-      - '**.yaml'  # Só executa se houver mudanças nos arquivos .yaml (ex: manifests Helm)
-  workflow_dispatch:  # Permite execução manual (ex: produção)
+      - '**/*.yaml'
+  workflow_dispatch:
 
 jobs:
   deploy:
-    name: Deploy para Kubernetes
-    runs-on: self-hosted  # Runner instalado em uma VM com acesso ao cluster
+    name: Helm Upgrade - Kubernetes
+    runs-on: self-hosted
 
     steps:
       - name: Checkout do Código
@@ -24,38 +25,45 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
-      - name: Verificar diretório atual
+      - name: Verificar Estrutura do Projeto
         run: |
           pwd
-          ls -R  # Verifica se os arquivos e os charts estão no caminho certo
+          ls -laR
 
-      - name: Verificar conteúdo do values-staging.yaml
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Verificar assinatura da imagem
         run: |
-          echo "📄 Conteúdo do values-staging.yaml:"
-          cat /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-staging.yaml
+          echo "${{ secrets.COSIGN_PUB }}" > cosign.pub
+          cosign verify --key cosign.pub docker.io/geforce8400gsd/giropops-senhas:1.0|| echo "⚠️ Imagem ainda não assinada."
 
+      - name: Assinar imagem com Cosign (se necessário)
+        run: |
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          echo "${{ secrets.COSIGN_PASSWORD }}" > cosign.pass
+          export COSIGN_PASSWORD=$(cat cosign.pass)
+          cosign sign --key cosign.key --yes docker.io/geforce8400gsd/giropops-senhas:1.0
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
 
       - name: Deploy para DEV
         if: github.ref == 'refs/heads/develop'
         run: |
-          helm upgrade --install giropops-dev /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste \
-          --namespace dev \
-          -f /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-dev.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          helm upgrade --install giropops-dev ${{ github.workspace }} \
+            --namespace dev \
+            -f ${{ github.workspace }}/values-dev.yaml \
+            --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
 
       - name: Deploy para STAGING
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/staging'
         run: |
-          helm upgrade --install giropops-staging /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste \
-          --namespace staging \
-          -f /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-staging.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          helm upgrade --install giropops-staging ${{ github.workspace }} \
+            --namespace staging \
+            -f ${{ github.workspace }}/values-staging.yaml \
+            --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
 
       - name: Deploy para PRODUÇÃO (manual)
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         run: |
-          helm upgrade --install giropops-prod /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste \
-          --namespace prod \
-          -f /opt/actions-runner/_work/PICK-2024-Teste/PICK-2024-Teste/values-prod.yaml \
-          --set deployments.giropops-senhas.image=linuxtips/giropops-senhas:1.0
+          helm upgrade --install giropops-prod ${{ github.workspace }} \
+            --namespace prod \
+            -f ${{ github.workspace }}/values-prod.yaml \
+            --set deployments.giropops-senhas.image=geforce8400gsd/giropops-senhas:1.0
