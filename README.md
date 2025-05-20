@@ -6,19 +6,23 @@ O Projeto final consite na resolução do [desafio PICK 2024_01](https://github.
 
 **Objetivos principais:**
 
-  Containerizar a aplicação com Docker e publicá-la.
+Docker: Criação e publicação da imagem da aplicação.
 
-  Orquestrar o deployment com Kubernetes e expor o serviço com Ingress.
+Cosign: Assinatura e verificação de imagens Docker.
 
-  Automatizar o deploy utilizando Helm Charts.
+Helm: Deploy automatizado da aplicação em cluster Kubernetes.
 
-  Implementar segurança de runtime com Kyverno e Cosign (assinatura de imagens).
+Kubernetes: Estrutura de namespaces para ambientes (dev, staging, prod).
 
-  Monitorar métricas com Prometheus e configurar alertas.
+GitHub Actions (Self-Hosted): CI/CD 100% automatizado e seguro, executado localmente.
 
-  Distribuir pacotes da aplicação utilizando Melange e Apko.
+Kyverno: Políticas de segurança para validar apenas imagens assinadas.
 
-  Implementar CI/CD para build e publicação dos pacotes em múltiplos ambientes
+APKO & Melange: Distribuição da aplicação empacotada como apk.
+
+Locust: Testes de carga injetados no cluster.
+
+Grafana + Prometheus: Monitoramento e visualização em tempo real da aplicação.
 
 ### Tecnologias envolvidas no projeto:
 
