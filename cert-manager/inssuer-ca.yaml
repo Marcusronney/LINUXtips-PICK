@@ -1,8 +1,8 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: giropops-ca
-  namespace: default
+  name: giropops-ca-issuer
+  namespace: prod
 spec:
   ca:
-    secretName: giropops-ca-key-pair
+    secretName: giropops-ca-secret

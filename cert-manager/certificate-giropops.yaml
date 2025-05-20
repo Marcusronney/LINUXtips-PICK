@@ -1,13 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: giropops-local-tls
-  namespace: default
+  name: giropops-cert
+  namespace: prod
 spec:
-  secretName: giropops-local-tls
-  issuerRef:
-    name: giropops-ca
-    kind: Issuer
-  commonName: giropops.local
+  secretName: giropops-tls
   dnsNames:
-    - giropops.local
+    - prod.giropops.local
+  issuerRef:
+    name: giropops-ca-issuer
+    kind: Issuer

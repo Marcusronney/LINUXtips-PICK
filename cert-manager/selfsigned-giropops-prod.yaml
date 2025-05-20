@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-giropops-prod
+  namespace: prod
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: giropops-ca
+  namespace: prod
+spec:
+  isCA: true
+  secretName: giropops-ca-secret
+  commonName: prod.giropops.local
+  issuerRef:
+    name: selfsigned-giropops-prod
+    kind: Issuer
