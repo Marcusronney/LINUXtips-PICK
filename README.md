@@ -2136,7 +2136,7 @@ kubectl create secret generic cosign-pub \
 
 # KUBE PROMETHEUS 
 
-[Kube Prometheu](https://github.com/prometheus-operator/kube-prometheus) é uma coleção de componentes para instalar e configurar um stack completo de monitoramento no Kubernetes, feito pela comunidade Prometheus + CoreOS.
+[Kube Prometheus](https://github.com/prometheus-operator/kube-prometheus) é uma coleção de componentes para instalar e configurar um stack completo de monitoramento no Kubernetes, feito pela comunidade Prometheus + CoreOS.
 
 
 ```
