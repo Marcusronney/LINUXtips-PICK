@@ -1283,7 +1283,7 @@ env: {{ (index $.Values "global" "environment") | default "dev" }}
 {{- end }}
 
 {{- define "giropops.image" -}}
-{{ .image | default "linuxtips/giropops-senhas:latest" }}
+{{ .image | default "geforce8400gsd/giropops-senhas:latest" }}
 {{- end }}
 
 {{- define "giropops.env" -}}
@@ -1311,6 +1311,67 @@ env: {{ (index $.Values "global" "environment") | default "dev" }}
 {{- end }}
 {{- end }}
 ````
+Explicando _helpers.tpl
+
+O **_helpers.tpl** é como se fosse uma biblioteca de funções auxiliares do Helm. Com ele é possível Padronizar e reutilizar trechos de código.
+
+"giropops.fullname" gera um nome único para cada recurso do Kubernetes.
+````
+{{- define "giropops.fullname" -}}
+{{ .Release.Name }}-{{ .Chart.Name }} #.Release = Nome do release passado na linha de comando do HELM (giropops-dev)
+{{- end }}
+````
+
+"giropops.labels" Padriniza as labels dos recursos do Kubernetes.
+````
+{{- define "giropops.labels" -}}
+app: {{ $.Chart.Name | default "giropops-app" }} #nome do chart, se não tiver nada, usa "giropops-app"
+release: {{ $.Release.Name }} #nome do release Helm
+env: {{ (index $.Values "global" "environment") | default "dev" }} #ambiente, se não for definido, usa o "dev" como default.
+{{- end }}
+````
+
+Definindo "giropops.image" tem a função de sempre garantir a definição de uma imagem, se não especificar dentro do values, irá ficar a default.
+````
+{{- define "giropops.image" -}}
+{{ .image | default "geforce8400gsd/giropops-senhas:latest" }} #define a imagem defalut
+{{- end }}
+````
+
+Se .component for igual a giropops-senhas, declara as váriaveis REDIS_HOST e REDIS_PORT.
+````
+{{- define "giropops.env" -}}
+{{- if eq .component "giropops-senhas" }}
+- name: REDIS_HOST
+  value: "redis"
+- name: REDIS_PORT
+  value: "6379"
+{{- end }}
+{{- end }}
+````
+"giropops.serviceName" tem a função de definir dinamicamente os nomes dos serviços do helm de acordo com os componentes da aplicação.
+Ele concatena Release + Chart + Componente e define o nome. Exemplo: Release = giropops-dev + Chart = giropops-senhas	+ Component = giropops-senhas-port	= 	giropops-dev-giropops-senhas-giropops-senhas-port
+````
+{{- define "giropops.serviceName" -}}
+{{ $.Release.Name }}-{{ $.Chart.Name }}-{{ .component }}
+{{- end }}
+````
+O "giropops.servicePorts" gera dinamicamente as portas dos serviços do Kubernetes. (Porta externa = port, Porta interna do Pod = TargetPort, nome da porta = name, tipo da porta = NodePort)
+
+````
+{{- define "giropops.servicePorts" -}} #inicia o helper
+{{- range .ports }} #lista as portas definidas
+- port: {{ .port }} #define a porta externa do service
+  targetPort: {{ .targetPort }} #define a porta do container
+  protocol: TCP #define o padrão TCP
+  name: {{ .name }} #nome da porta
+  {{- if eq .serviceType "NodePort" }} #Garante o uso da tipo de porta como NodePort.
+  nodePort: {{ .NodePort }} #define NodePort
+  {{- end }} #fecha o loop do range
+{{- end }}
+{{- end }}
+````
+
 
 /templates/ deploymeny.yaml
 ````
