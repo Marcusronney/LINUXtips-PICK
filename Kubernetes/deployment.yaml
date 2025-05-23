@@ -15,7 +15,7 @@ spec:
         app: giropops-senhas
     spec:
       containers:
-      - image: deforce8400gsd/gripopops-senhas:1.0
+      - image: geforce8400gsd/giropops-senhas:1.0
         name: giropops-senhas
         env:
         - name: REDIS_HOST
