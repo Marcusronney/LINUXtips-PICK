@@ -1,0 +1,21 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verificando-assinaturas-images
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: verify-signed-images
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - prod
+      verifyImages:
+        - imageReferences:
+            - "docker.io/geforce8400gsd/*"
+          key: "k8s://cert-manager/cosign-pub"
+          attestations: [] #Neste campo, defini que a chave está no cluster, o namespace onde procurar e o nome da chave.
