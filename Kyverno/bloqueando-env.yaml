@@ -1,0 +1,29 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: block-sensitive-env-vars-prod
+spec:
+  validationFailureAction: enforce # Quando violado, o bloqueio é realizado
+  background: true #aplica a pods existentes
+  rules:
+    - name: bloqueando-env
+      match:
+        any: #aqui, estou setando para a namespace Prod
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - prod
+      validate:
+        message: "Variáveis de ambiente sensíveis não são permitidas em 'prod'."
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.containers[].env[].name }}"
+                operator: AnyIn
+                value:#bloqueio
+                  - PASSWORD
+                  - SECRET
+                  - TOKEN
+                  - AWS_ACCESS_KEY
+                  - AWS_SECRET_KEY
