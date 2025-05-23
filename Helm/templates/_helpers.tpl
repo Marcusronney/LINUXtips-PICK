@@ -5,11 +5,11 @@
 {{- define "giropops.labels" -}}
 app: {{ $.Chart.Name | default "giropops-app" }}
 release: {{ $.Release.Name }}
-env: {{ (index $.Values "global" "environment") | default "dev" }}  # ✅ Evita erro se "global" não existir
+env: {{ (index $.Values "global" "environment") | default "dev" }}
 {{- end }}
 
 {{- define "giropops.image" -}}
-{{ .image | default "linuxtips/giropops-senhas:latest" }}
+{{ .image | default "geforce8400gsd/giropops-senhas:latest}}
 {{- end }}
 
 {{- define "giropops.env" -}}
